@@ -6,6 +6,8 @@ import { publicRoute } from './routes';
 import AdminLayout from './layout/Admin/AdminLayout';
 import { AdminRoutes } from './routes/AdminRoutes';
 import ProtectedRoute from './routes/ProtectedRoute';
+import { SellerRoutes } from './routes/SellerRoutes';
+import SellerLayout from './layout/Seller/SellerLayout';
 
 const App: React.FC = () => {
   return (
@@ -39,6 +41,24 @@ const App: React.FC = () => {
                     <Page />
                     <ToastContainer />
                   </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+          );
+        })}
+
+        {SellerRoutes.map((route, index) => {
+          const Page = route.component;
+          return (
+            <Route
+              key={`seller-${index}`}
+              path={route.path}
+              element={
+                <ProtectedRoute role="seller"> 
+                  <SellerLayout> 
+                    <Page />
+                    <ToastContainer />
+                  </SellerLayout>
                 </ProtectedRoute>
               }
             />

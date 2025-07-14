@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, type ReactNode } from 'react';
 import {
   Layout,
   Menu,
@@ -50,8 +50,10 @@ interface MenuItem {
   label: string;
   children?: MenuItem[];
 }
-
-const SellerLayout: React.FC = () => {
+interface AdminLayoutProps {
+  children: ReactNode;
+}
+const SellerLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [selectedKey, setSelectedKey] = useState<string>('dashboard');
   
   const menuItems: MenuItem[] = [
@@ -174,7 +176,7 @@ const SellerLayout: React.FC = () => {
 
         <Layout style={{ padding: '24px' }}>
           <Content style={{ background: '#f0f2f5', minHeight: 280 }}>
-            <Outlet />
+            {children}
           </Content>
         </Layout>
       </Layout>
