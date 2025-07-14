@@ -1,0 +1,120 @@
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-title {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.cart-summary {
+    background-color: #f8f8f8;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+
+    h2 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #ddd;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        input {
+            padding: 5px;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+        font-size: 18px;
+        margin-top: 10px;
+
+        .total-price {
+            color: #d0021b;
+            font-size: 20px;
+        }
+    }
+}
+
+form {
+    .form-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+
+        @media (max-width: 768px) {
+            flex-direction: column;
+        }
+    }
+
+    .input-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+
+            &:focus {
+                border-color: #007bff;
+                outline: none;
+            }
+        }
+
+        select {
+            appearance: none;
+            background-color: #fff;
+            cursor: pointer;
+        }
+    }
+}
+
+.checkout-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+
+    &:hover {
+        background-color: #d0021b;
+    }
+}
+
+.payment-option {
+    margin-top: 20px;
+}

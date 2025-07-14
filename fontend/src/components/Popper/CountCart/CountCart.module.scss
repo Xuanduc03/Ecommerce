@@ -1,0 +1,118 @@
+.content {
+  width: 300px;
+  max-height: 300px;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  overflow-y: auto;
+  border-radius: 8px;
+
+    // Tuỳ chỉnh thanh cuộn (Scrollbar)
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+}
+
+.list-cart {
+    background-color: #fff;
+    margin-top: 20px;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+    .list-count {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+  
+      p {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+      }
+  
+      .count-all {
+        font-size: 14px;
+        color: #007bff;
+        text-decoration: none;
+  
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  
+    .list-product {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+  
+      &:last-child {
+        border-bottom: none;
+      }
+  
+      img {
+        width: 60px;
+        height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+        margin-right: 12px;
+      }
+  
+      .detail {
+        flex: 1;
+  
+        .name-product {
+          font-size: 14px;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 4px;
+        }
+  
+        .type-product {
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 8px;
+        }
+  
+        .price-list {
+          display: flex;
+          align-items: center;
+  
+          .price {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-right: 8px;
+          }
+  
+          .old-price {
+            font-size: 12px;
+            text-decoration: line-through;
+            color: #999;
+          }
+        }
+  
+        .quantity {
+          font-size: 12px;
+          color: #666;
+          margin-top: 4px;
+        }
+      }
+  
+      .delete {
+        button {
+          background-color: transparent;
+          border: none;
+          color: #ff4d4f;
+          font-size: 16px;
+          cursor: pointer;
+  
+          &:hover {
+            color: #d9363e;
+          }
+        }
+      }
+    }
+  }
+  

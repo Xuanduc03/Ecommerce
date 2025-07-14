@@ -1,0 +1,107 @@
+.carousel {
+  margin: 20px auto;
+  padding: 2rem;
+  display: grid;
+  max-width: 1438px;
+  border-radius: 16px;
+  height: 360px;
+  max-height: 360px;
+  color: #002f3d;
+  position: relative;
+  overflow: hidden;
+
+  .content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .left {
+      max-width: 40%;
+
+      h2 {
+        font-size: 2rem;
+        font-weight: 700;
+      }
+
+      p {
+        margin: 1rem 0;
+        font-size: 1.1rem;
+      }
+
+      .cta {
+        display: 2line-block;
+        background: #00444f;
+        color: #00b9c6;
+        padding: 0.6rem 1.2rem;
+        border-radius: 2rem;
+        font-weight: bold;
+        text-decoration: none;
+      }
+    }
+
+    .right {
+      display: flex;
+      gap: 2rem;
+
+      .item {
+        text-align: center;
+
+        img {
+          bottom: unset;
+          height: auto;
+          left: unset;
+          position: relative;
+          right: unset;
+          top: unset;
+          transform: unset;
+          width: 260px;
+        }
+
+        a {
+          display: block;
+          margin-top: 0.5rem;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  .arrows {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    display: flex;
+    gap: 0.5rem;
+
+    button {
+      background: white;
+      border: none;
+      padding: 0.6rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+  }
+
+  .indicators {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.4rem;
+
+    button {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+
+      &.active {
+        background: #000;
+      }
+    }
+  }
+}

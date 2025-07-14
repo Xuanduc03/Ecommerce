@@ -1,0 +1,124 @@
+.create-shop-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  h1 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: #666;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #444;
+
+      &[required]::after {
+        content: ' *';
+        color: #ff4d4f;
+      }
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border 0.2s;
+
+      &:focus {
+        border-color: #1890ff;
+        outline: none;
+      }
+
+      &::placeholder {
+        color: #aaa;
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .char-counter {
+      display: block;
+      text-align: right;
+      font-size: 0.8rem;
+      color: #999;
+      margin-top: 0.25rem;
+    }
+  }
+
+  .file-upload {
+    display: flex;
+    align-items: center;
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-btn {
+      background: #f0f2f5;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px dashed #ccc;
+
+      &:hover {
+        background: #e6e8eb;
+      }
+    }
+
+    .file-name {
+      margin-left: 1rem;
+      font-size: 0.9rem;
+      color: #555;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 200px;
+    }
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 1rem;
+
+    &:hover {
+      background: #40a9ff;
+    }
+
+    &:disabled {
+      background: #bae7ff;
+      cursor: not-allowed;
+    }
+  }
+}

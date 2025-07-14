@@ -1,0 +1,172 @@
+.header {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  font-family: Arial, sans-serif;
+  width: 100%;
+
+}
+
+.header-top {
+  font-size: 12px;
+  padding: 0 24px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+
+.header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.top-link {
+  color: #0654ba;
+  text-decoration: none;
+  margin: 0 2px;
+  font-weight: 500;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.top-nav {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: #222;
+  font-size: 12px;
+  .icon {
+    font-size: 18px;
+    margin-left: 8px;
+    cursor: pointer;
+  }
+}
+
+.header-main {
+  padding: 16px 24px 0 24px;
+}
+
+.header-main-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.logo img {
+  height: 40px;
+}
+
+.search-form-ebay {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  border: 2px solid #222;
+  border-radius: 24px;
+  background: #fff;
+  padding: 0 4px;
+  margin: 0 24px;
+  height: 38px;
+  position: relative;
+}
+
+.search-input-ebay {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  padding: 0 10px;
+  height: 36px;
+  background: transparent;
+}
+
+.search-category {
+  display: flex;
+  align-items: center;
+  border-left: 1px solid #eee;
+  padding-left: 12px;
+  position: relative;
+  min-width: 170px;
+}
+
+.category-select {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  padding: 0 18px 0 0;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.dropdown-icon {
+  position: absolute;
+  right: 6px;
+  pointer-events: none;
+  color: #888;
+}
+
+.search-btn-ebay {
+  background: #366fe3;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 18px;
+  margin-left: 12px;
+  height: 40px;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover {
+    background: #1746a2;
+  }
+}
+
+.search-advanced {
+  margin-left: 8px;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.header-menu {
+  padding: 0 24px;
+}
+
+.header-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 0;
+}
+
+.menu-link {
+  color: #222;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 400;
+  &:hover {
+    color: #0654ba;
+    text-decoration: underline;
+  }
+}
+
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}

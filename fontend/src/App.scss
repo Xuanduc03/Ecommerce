@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+:root {
+   --black: #000;
+   --white: #fff;
+   --width-content: 1400px;
+}
+
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+ font-family: "Open Sans", serif;
+}
+
+body {
+ font-family: "Open Sans", serif;
+}
+a[href]{
+  text-decoration: none;
+}
+button,input, [tabindex] {
+  outline: none;
+  border: none;
+}
