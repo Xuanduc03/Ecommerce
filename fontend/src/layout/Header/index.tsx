@@ -3,8 +3,10 @@ import styles from './Header.module.scss';
 import { Link } from 'react-router-dom';
 import { FaSearch, FaChevronDown, FaBell, FaShoppingCart } from "react-icons/fa";
 import { useSelector, useDispatch } from 'react-redux';
-import {type RootState } from '../../redux/store'; // hoặc đường dẫn chính xác tới store.ts
+import { type RootState } from '../../redux/store'; // hoặc đường dẫn chính xác tới store.ts
 import { logout } from '../../redux/authSlice';
+import { CountCart } from '../../components/Popper/CountCart';
+import {type UseSelector } from 'react-redux';
 
 
 const categories = [
@@ -29,6 +31,7 @@ const Header: React.FC = () => {
     const user = useSelector((state: RootState) => state.auth.user);
     const dispatch = useDispatch();
 
+    const cartItems = useSelector((state: RootState) => state.cart.items);
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         // Xử lý tìm kiếm
@@ -79,9 +82,15 @@ const Header: React.FC = () => {
                         <span>Danh sách theo dõi <FaChevronDown /></span>
                         <span>eBay của tôi <FaChevronDown /></span>
                         <FaBell className={styles.icon} />
-                        <Link to="/cart">
-                            <FaShoppingCart className={styles.icon} />
-                        </Link>
+                        <CountCart>
+                            <div className={styles['cart-wrapper']}>
+                                <FaShoppingCart className={styles.icon} />
+                                {/* Hiển thị số lượng nếu có */}
+                                {cartItems.length > 0 && (
+                                    <span className={styles['cart-badge']}>{cartItems.length}</span>
+                                )}
+                            </div>
+                        </CountCart>
                     </div>
                 </div>
             </div>

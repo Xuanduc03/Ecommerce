@@ -1,17 +1,15 @@
-import CategoriesManager from "../pages/admin/CategoryManager";
-import AdminDashboard from "../pages/admin/Dashboard";
-import SellerManagement from "../pages/admin/SellersManager";
-import UsersManager from "../pages/admin/UsersManager";
+import AddProductStepForm from "../components/Product/AddProduct";
 import DashboardSeller from "../pages/seller/DashboardSeller";
+import OrderSellerManager from "../pages/seller/OrderSeller";
+import ProductSeller from "../pages/seller/ProductSeller";
 import  type { IRoute } from "./routes";
 
 
 const SellerRoutes : IRoute[] = [
     {path: "/seller", component: DashboardSeller },
-    {path: "/seller/users", component: UsersManager},
-    {path: "/admin/sellers", component: SellerManagement},
-    {path: "/admin/category", component: CategoriesManager}
-
+    {path: "/seller/products", component: ProductSeller},
+    {path: "/seller/product/add", component: AddProductStepForm},
+    {path: "/seller/orders", component: OrderSellerManager}
 ];
 
 export {SellerRoutes};

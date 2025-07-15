@@ -9,10 +9,10 @@ export interface ProductCardProps {
   currentPrice: number;
   discount: number;
   image: string;
-  badge: string;
+  badge?: string; 
   sold: number;
   rating: number;
-  isFlashSale: boolean;
+  isFlashSale?: boolean; 
 }
 
 export const ProductCard: React.FC<{ product: ProductCardProps }> = ({ product }) => {
@@ -23,7 +23,7 @@ export const ProductCard: React.FC<{ product: ProductCardProps }> = ({ product }
   };
 
   return (
-    <div className="product-card">
+    <div className="product-card" onClick={handleClick} style={{ cursor: 'pointer' }}>
       <div className="product-image">
         <img src={product.image} alt={product.name} />
         {product.discount > 0 && (
@@ -52,6 +52,7 @@ export const ProductCard: React.FC<{ product: ProductCardProps }> = ({ product }
           <span className="sold">Đã bán {product.sold}k</span>
           <div className="rating">
             <span>★★★★★</span>
+            <span className="rating-value">({product.rating})</span>
           </div>
         </div>
       </div>

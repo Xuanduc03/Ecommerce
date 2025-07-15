@@ -9,7 +9,8 @@ import {
   BellOutlined,
   MailOutlined,
   LogoutOutlined,
-  SettingOutlined
+  SettingOutlined,
+  TagsOutlined
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Link, Outlet, useLocation } from 'react-router-dom';
@@ -49,6 +50,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       key: '/admin/products',
       icon: <AppstoreOutlined />,
       label: <Link to="/admin/products">Products</Link>,
+    },
+    {
+      key: '/admin/categories',
+      icon: <TagsOutlined />,
+      label: <Link to="/admin/categories">Categories</Link>,
     },
     {
       key: '/admin/orders',

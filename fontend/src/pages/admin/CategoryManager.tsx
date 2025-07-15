@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Table, Input, Button, Space, Card, Row, Col, Modal, Form, Select, message, Dropdown, Menu
+  Table, Input, Button, Card, Row, Col, Modal, Form, Select, message, Dropdown, Menu
 } from 'antd';
 import {
   PlusOutlined,

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductCard, type ProductCardProps } from '../ProductCard';
 import './ProductListSection.scss';
+import { useNavigate } from 'react-router-dom';
 
 interface ProductListSectionProps {
   title: string;
@@ -21,6 +22,7 @@ export const ProductListSection: React.FC<ProductListSectionProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(products.length / itemsPerPage);
+  const navigate = useNavigate();
 
   const currentProducts = useMemo(() => {
     if (!showPagination) return products;
@@ -51,11 +53,15 @@ export const ProductListSection: React.FC<ProductListSectionProps> = ({
         )}
       </div>
 
-      <div className={`product-container ${layout}`}>
-        {products.map((product) =>
-          product ? <ProductCard key={product.id} product={product} /> : null
+       <div className={`product-container ${layout}`}>
+        {currentProducts.map((product) =>
+          product ? (
+            <ProductCard 
+              key={product.id} 
+              product={product}
+            />
+          ) : null
         )}
-
       </div>
 
       {showPagination && totalPages > 1 && (

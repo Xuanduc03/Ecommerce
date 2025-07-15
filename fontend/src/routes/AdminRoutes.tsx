@@ -9,7 +9,7 @@ const AdminRoutes : IRoute[] = [
     {path: "/admin", component: AdminDashboard},
     {path: "/admin/users", component: UsersManager},
     {path: "/admin/sellers", component: SellerManagement},
-    {path: "/admin/category", component: CategoriesManager}
+    {path: "/admin/categories", component: CategoriesManager}
 
 ];
 
