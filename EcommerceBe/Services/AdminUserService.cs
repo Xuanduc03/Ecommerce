@@ -54,9 +54,9 @@ namespace EcommerceBe.Services
             user.Email = model.Email;
             user.Username = model.Username;
             user.PhoneNumber = model.PhoneNumber;
-            user.Password = model.Password;
             user.IsVerified = model.IsVerified;
             user.IsActive = model.IsActive;
+            user.Role = model.Role;
             user.UpdatedAt = DateTime.UtcNow;
 
             await _repo.UpdateAsync(user);
@@ -96,9 +96,17 @@ namespace EcommerceBe.Services
         }
 
 
-        public async Task DeleteUserAsync(Guid userId)
+        public async Task<bool> DeleteUserAsync(Guid userId)
         {
-            await _repo.DeleteAsync(userId);
+            var user = await _repo.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            await _repo.DeleteAsync(user);
+            await _repo.SaveChangeAsync();
+            return true;
         }
     }
 }

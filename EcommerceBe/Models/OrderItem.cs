@@ -10,7 +10,6 @@ namespace EcommerceBe.Models
         public Guid ProductVariantId { get; set; }
         public int Quantity { get; set; }
         public decimal Price { get; set; }
-
         public Order Order { get; set; }
         public Product product { get; set; }    
         public ProductVariant ProductVariant { get; set; }

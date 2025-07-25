@@ -1,0 +1,639 @@
+        .product-review {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 20px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #f8f9fa;
+        }
+
+        .review-header {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          margin-bottom: 20px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 20px;
+        }
+
+        .rating-summary {
+          display: flex;
+          align-items: flex-start;
+          gap: 24px;
+        }
+
+        .overall-rating {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-width: 120px;
+        }
+
+        .rating-score {
+          display: flex;
+          align-items: baseline;
+          gap: 4px;
+          margin-bottom: 8px;
+        }
+
+        .score-number {
+          font-size: 32px;
+          font-weight: 700;
+          color: #333;
+        }
+
+        .score-total {
+          font-size: 16px;
+          color: #666;
+        }
+
+        .rating-info {
+          text-align: center;
+          color: #666;
+          font-size: 14px;
+        }
+
+        .customer-count {
+          margin-bottom: 4px;
+        }
+
+        .review-count {
+          color: #999;
+        }
+
+        .rating-breakdown {
+          flex: 1;
+          max-width: 300px;
+        }
+
+        .rating-bar-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 6px;
+        }
+
+        .rating-number {
+          font-size: 14px;
+          color: #333;
+          width: 12px;
+        }
+
+        .rating-star {
+          color: #ffa500;
+          fill: #ffa500;
+        }
+
+        .rating-bar {
+          flex: 1;
+          height: 8px;
+          background: #e9ecef;
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .rating-fill {
+          height: 100%;
+          background: #007bff;
+          transition: width 0.3s ease;
+        }
+
+        .rating-percentage {
+          font-size: 14px;
+          color: #666;
+          width: 40px;
+          text-align: right;
+        }
+
+        .phone-preview {
+          width: 80px;
+          height: 80px;
+          background: #000;
+          border-radius: 12px;
+          margin-left: auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .phone-screen {
+          width: 70px;
+          height: 70px;
+          background: linear-gradient(45deg, #1a1a1a, #333);
+          border-radius: 8px;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          grid-template-rows: repeat(4, 1fr);
+          gap: 2px;
+          padding: 4px;
+        }
+
+        .app-icon {
+          background: linear-gradient(45deg, #007bff, #0056b3);
+          border-radius: 2px;
+          opacity: 0.8;
+        }
+
+        .app-icon:nth-child(2n) {
+          background: linear-gradient(45deg, #28a745, #1e7e34);
+        }
+
+        .app-icon:nth-child(3n) {
+          background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+
+        .app-icon:nth-child(4n) {
+          background: linear-gradient(45deg, #ffc107, #e0a800);
+        }
+
+        .reviews-section {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .review-item {
+          border-bottom: 1px solid #e9ecef;
+          padding-bottom: 20px;
+          margin-bottom: 20px;
+        }
+
+        .review-item:last-child {
+          border-bottom: none;
+          margin-bottom: 0;
+        }
+
+        .review-author {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+
+        .author-name {
+          font-weight: 600;
+          color: #333;
+        }
+
+        .verified-badge {
+          background: #28a745;
+          color: white;
+          font-size: 11px;
+          padding: 2px 6px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          gap: 2px;
+        }
+
+        .review-rating {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+
+        .star {
+          color: #ffa500;
+        }
+
+        .star.filled {
+          fill: #ffa500;
+        }
+
+        .star.empty {
+          fill: none;
+        }
+
+        .recommend-badge {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          color: #dc3545;
+          font-size: 13px;
+        }
+
+        .review-content {
+          color: #333;
+          line-height: 1.6;
+          margin-bottom: 12px;
+        }
+
+        .review-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          color: #666;
+          font-size: 14px;
+        }
+
+        .like-button {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: none;
+          border: none;
+          color: #666;
+          cursor: pointer;
+          padding: 4px 8px;
+          border-radius: 4px;
+          transition: background-color 0.2s;
+        }
+
+        .like-button:hover {
+          background: #f8f9fa;
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 12px;
+          margin-top: 20px;
+        }
+
+        .btn {
+          flex: 1;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          border: none;
+        }
+
+        .btn-outline {
+          background: white;
+          border: 1px solid #dee2e6;
+          color: #333;
+        }
+
+        .btn-outline:hover {
+          background: #f8f9fa;
+        }
+
+        .btn-primary {
+          background: #007bff;
+          color: white;
+        }
+
+        .btn-primary:hover {
+          background: #0056b3;
+        }
+
+        @media (max-width: 768px) {
+          .product-review {
+            padding: 12px;
+          }
+
+          .rating-summary {
+            flex-direction: column;
+            gap: 16px;
+          }
+
+          .phone-preview {
+            align-self: center;
+          }
+
+          .action-buttons {
+            flex-direction: column;
+          }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .modal-content {
+          background: white;
+          border-radius: 12px;
+          width: 100%;
+          max-width: 500px;
+          max-height: 90vh;
+          overflow-y: auto;
+          position: relative;
+        }
+
+        .modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 20px 24px;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .modal-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #333;
+          margin: 0;
+        }
+
+        .modal-close {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 4px;
+          color: #666;
+          border-radius: 4px;
+          transition: background-color 0.2s;
+        }
+
+        .modal-close:hover {
+          background: #f8f9fa;
+        }
+
+        .modal-body {
+          padding: 24px;
+        }
+
+        .product-info {
+          display: flex;
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 2px;
+          margin-bottom: 10px;
+        }
+
+        .product-image {
+          flex-shrink: 0;
+        }
+
+        .product-name {
+          font-size: 16px;
+          font-weight: 600;
+          color: #333;
+          margin: 0;
+        }
+
+        .rating-section {
+          text-align: center;
+          margin-bottom: 24px;
+        }
+
+        .rating-stars {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-bottom: 12px;
+        }
+
+        .rating-star-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #ddd;
+          transition: color 0.2s;
+          padding: 4px;
+        }
+
+        .rating-star-btn:hover,
+        .rating-star-btn.active {
+          color: #ffa500;
+        }
+
+        .rating-star-btn.active svg {
+          fill: #ffa500;
+        }
+
+        .rating-labels {
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+          color: #666;
+          max-width: 300px;
+          margin: 0 auto;
+        }
+
+        .rating-label {
+          flex: 1;
+          text-align: center;
+          transition: color 0.2s;
+        }
+
+        .rating-label.active {
+          color: #333;
+          font-weight: 600;
+        }
+
+        .comment-section {
+          margin-bottom: 24px;
+        }
+
+        .comment-input {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          font-size: 14px;
+          font-family: inherit;
+          resize: vertical;
+          min-height: 80px;
+          box-sizing: border-box;
+        }
+
+        .comment-input:focus {
+          outline: none;
+          border-color: #007bff;
+        }
+
+        .comment-input::placeholder {
+          color: #999;
+        }
+
+        .options-section {
+          margin-bottom: 24px;
+        }
+
+        .checkbox-label {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          font-size: 14px;
+          color: #333;
+          cursor: pointer;
+          margin-bottom: 16px;
+          line-height: 1.4;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+          position: absolute;
+          opacity: 0;
+          cursor: pointer;
+        }
+
+        .checkmark {
+          width: 16px;
+          height: 16px;
+          border: 2px solid #ddd;
+          border-radius: 3px;
+          position: relative;
+          flex-shrink: 0;
+          margin-top: 2px;
+          transition: all 0.2s;
+        }
+
+        .checkbox-label input[type="checkbox"]:checked+.checkmark {
+          background: #007bff;
+          border-color: #007bff;
+        }
+
+        .checkbox-label input[type="checkbox"]:checked+.checkmark::after {
+          content: '';
+          position: absolute;
+          left: 4px;
+          top: 1px;
+          width: 4px;
+          height: 8px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+        }
+
+        .photo-upload-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #f8f9fa;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          padding: 8px 12px;
+          font-size: 14px;
+          color: #666;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .photo-upload-btn:hover {
+          background: #e9ecef;
+        }
+
+        .contact-section {
+          margin-bottom: 24px;
+        }
+
+        .contact-inputs {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+
+        .contact-input {
+          flex: 1;
+          padding: 10px 12px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-size: 14px;
+          font-family: inherit;
+        }
+
+        .contact-input:focus {
+          outline: none;
+          border-color: #007bff;
+        }
+
+        .contact-input::placeholder {
+          color: #999;
+        }
+
+        .policy-checkbox {
+          font-size: 12px;
+          color: #666;
+        }
+
+        .policy-link {
+          color: #007bff;
+          text-decoration: none;
+        }
+
+        .policy-link:hover {
+          text-decoration: underline;
+        }
+
+        .modal-footer {
+          padding: 16px 24px;
+          border-top: 1px solid #e9ecef;
+          text-align: center;
+        }
+
+        .submit-review-btn {
+          width: 100%;
+          padding: 12px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 500;
+          cursor: pointer;
+          margin-bottom: 12px;
+          transition: background-color 0.2s;
+        }
+
+        .submit-review-btn:hover:not(:disabled) {
+          background: #0056b3;
+        }
+
+        .submit-review-btn:disabled {
+          background: #ccc;
+          cursor: not-allowed;
+        }
+
+        .footer-links {
+          font-size: 12px;
+          color: #666;
+        }
+
+        .footer-link {
+          color: #007bff;
+          text-decoration: none;
+        }
+
+        .footer-link:hover {
+          text-decoration: underline;
+        }
+
+        .separator {
+          margin: 0 8px;
+        }
+
+        @media (max-width: 768px) {
+          .modal-overlay {
+            padding: 12px;
+          }
+
+          .modal-content {
+            max-height: 95vh;
+          }
+
+          .contact-inputs {
+            flex-direction: column;
+          }
+
+          .rating-stars {
+            gap: 4px;
+          }
+
+          .rating-star-btn svg {
+            width: 24px;
+            height: 24px;
+          }
+        }

@@ -1,0 +1,63 @@
+.samsung-header {
+  h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+    color: #000;
+  }
+
+  .info-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+
+    .info-item {
+      ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 5px 0 0 0;
+
+        li {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+
+  .tab-navigation {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 15px;
+
+    .tab-button {
+      flex: 1;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #666;
+      position: relative;
+
+      &.active {
+        color: #0066cc;
+        font-weight: bold;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background-color: #0066cc;
+        }
+      }
+
+      &:hover {
+        color: #004499;
+      }
+    }
+  }
+}

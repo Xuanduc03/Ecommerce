@@ -49,22 +49,14 @@ const UsersManager: React.FC = () => {
   const [searchText, setSearchText] = useState<string>('');
   const [searchType, setSearchType] = useState<string>('username');
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
-
-  const mapRoleToEnum = (roleStr: string): number => {
-  switch (roleStr) {
-    case "Client": return 0;
-    case "Seller": return 1;
-    case "Admin": return 2;
-    default: return 0;
-  }
-};
-
 
   const fetchUsers = async (search: string = '', page: number = 1, pageSize: number = 10) => {
     setLoading(true);
@@ -83,7 +75,7 @@ const UsersManager: React.FC = () => {
         ...user,
         key: user.userId || index.toString(),
         stt: (page - 1) * pageSize + index + 1,
-        role: (user.role),
+        role: mapEnumToRole(user.role),
       }));
       setUsers(usersWithIndex);
       setTotal(totalCount || items.length);
@@ -120,29 +112,29 @@ const UsersManager: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  const handleDelete = (userId: string) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa người dùng',
-      content: 'Bạn có chắc chắn muốn xóa người dùng này?',
-      okText: 'Xóa',
-      cancelText: 'Hủy',
-      onOk: async () => {
-        try {
-          const token = localStorage.getItem('authToken');
-          if (!token) {
-            message.error('Vui lòng đăng nhập lại.');
-            return;
-          }
-          await axios.delete(`https://localhost:7040/api/admin/users/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          message.success('Xóa người dùng thành công');
-          fetchUsers(searchText, page, pageSize);
-        } catch (error: any) {
-          message.error(error.response?.data?.message || 'Lỗi khi xóa người dùng');
-        }
-      },
-    });
+  const showDeleteConfirm = (userId: string) => {
+    setUserToDelete(userId);
+    setIsDeleteModalVisible(true);
+  };
+
+  const handleDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        message.error('Vui lòng đăng nhập lại.');
+        return;
+      }
+      await axios.delete(`https://localhost:7040/api/admin/users/${userToDelete}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      message.success('Xóa người dùng thành công');
+      setIsDeleteModalVisible(false);
+      fetchUsers(searchText, page, pageSize);
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Lỗi khi xóa người dùng');
+    }
   };
 
   const handleSubmit = async () => {
@@ -170,7 +162,6 @@ const UsersManager: React.FC = () => {
         });
         message.success('Cập nhật người dùng thành công');
       } else {
-        
         await axios.post(`https://localhost:7040/api/admin/users/create`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -180,6 +171,24 @@ const UsersManager: React.FC = () => {
       fetchUsers(searchText, page, pageSize);
     } catch (error: any) {
       message.error(error.response?.data?.message || 'Lỗi khi lưu thông tin người dùng');
+    }
+  };
+
+  const mapEnumToRole = (roleEnum: number): 'Client' | 'Seller' | 'Admin' => {
+    switch (roleEnum) {
+      case 0: return 'Client';
+      case 1: return 'Seller';
+      case 2: return 'Admin';
+      default: return 'Client'; // fallback
+    }
+  };
+
+  const mapRoleToEnum = (roleStr: string): number => {
+    switch (roleStr) {
+      case "Client": return 0;
+      case "Seller": return 1;
+      case "Admin": return 2;
+      default: return 0;
     }
   };
 
@@ -244,10 +253,19 @@ const UsersManager: React.FC = () => {
         <Dropdown
           overlay={
             <Menu>
-              <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+              <Menu.Item
+                key="edit"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+              >
                 Sửa
               </Menu.Item>
-              <Menu.Item key="delete" icon={<DeleteOutlined />} onClick={() => handleDelete(record.userId)}>
+              <Menu.Item
+                key="delete"
+                icon={<DeleteOutlined />}
+                onClick={() => showDeleteConfirm(record.userId)}
+                danger
+              >
                 Xóa
               </Menu.Item>
             </Menu>
@@ -257,7 +275,7 @@ const UsersManager: React.FC = () => {
           <Button type="text" icon={<EllipsisOutlined />} />
         </Dropdown>
       ),
-    },
+    }
   ];
 
   return (
@@ -379,38 +397,40 @@ const UsersManager: React.FC = () => {
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item
-                name="password"
-                label="Mật khẩu"
-                rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' }]}
-              >
-                <Input.Password placeholder="Nhập mật khẩu" />
+              <Form.Item name="isActive" label="Kích hoạt">
+                <Select
+                  options={[
+                    { value: 'true', label: 'Active' },
+                    { value: 'false', label: 'Inactive' },
+                  ]}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="isVerified" label="Đã xác minh">
                 <Select
                   options={[
-                    { value: true, label: 'Có' },
-                    { value: false, label: 'Không' },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="isActive" label="Kích hoạt">
-                <Select
-                  options={[
-                    { value: true, label: 'Active' },
-                    { value: false, label: 'Inactive' },
+                    { value: 'true', label: 'Có' },
+                    { value: 'false', label: 'Không' },
                   ]}
                 />
               </Form.Item>
             </Col>
           </Row>
         </Form>
+      </Modal>
+
+      <Modal
+        title="Xác nhận xóa người dùng"
+        open={isDeleteModalVisible}
+        onOk={handleDelete}
+        onCancel={() => setIsDeleteModalVisible(false)}
+        okText="Xóa"
+        cancelText="Hủy"
+        okType="danger"
+      >
+        <p>Bạn có chắc chắn muốn xóa tài khoản không?</p>
+        <p>Hành động này không thể hoàn tác.</p>
       </Modal>
     </div>
   );

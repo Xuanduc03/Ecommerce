@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Reflection;
+using CloudinaryDotNet;
+using EcommerceBe.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -76,6 +78,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
+
+builder.Services.AddSingleton<Cloudinary>(provider =>
+{
+    var settings = builder.Configuration
+        .GetSection("CloudinarySettings")
+        .Get<CloudinarySettings>();
+
+    var account = new Account(settings.CloudName, settings.ApiKey, settings.ApiSecret);
+    return new Cloudinary(account);
+});
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -93,7 +109,7 @@ app.UseHttpsRedirection();
 // Quan trọng: Phải gọi UseAuthentication() TRƯỚC UseAuthorization()
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseStaticFiles();
 app.MapControllers();
 
 app.Run();

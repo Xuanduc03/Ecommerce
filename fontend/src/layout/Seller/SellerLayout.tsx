@@ -53,7 +53,6 @@ const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
 
   const handleLogout = () => {
     dispatch(logout());
-    // Optional: redirect hoặc reload trang
     window.location.href = '/login';
   };
   const menuItems: MenuItem[] = [
@@ -88,11 +87,11 @@ const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
       ]
     },
     {
-      key: 'marketing',
+      key: 'shop',
       icon: <RiseOutlined />,
-      label: 'Trung tâm Marketing',
+      label: 'Trung tâm Shop',
       children: [
-        { key: 'marketing-centre', icon: null, label: 'Trung tâm Marketing' },
+        { key: '/seller/shop', icon: null, label: 'Trung tâm Shop' },
         { key: 'shopee-ads', icon: null, label: 'Quảng cáo Shopee' }
       ]
     },
@@ -109,16 +108,6 @@ const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
         { key: 'my-income', icon: null, label: 'Thu nhập của tôi' },
         { key: 'my-balance', icon: null, label: 'Số dư của tôi' },
         { key: 'bank-accounts', icon: null, label: 'Tài khoản ngân hàng' }
-      ]
-    },
-    {
-      key: 'data',
-      icon: <DatabaseOutlined />,
-      label: 'Dữ liệu',
-      children: [
-        { key: 'business-insights', icon: null, label: 'Thông tin kinh doanh' },
-        { key: 'account-health', icon: null, label: 'Sức khỏe tài khoản' },
-        { key: 'preferred-seller', icon: null, label: 'Người bán ưu tiên' }
       ]
     }
   ];

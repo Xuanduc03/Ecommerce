@@ -11,7 +11,7 @@ interface DefaultLayoutProps {
 }
 const DefaultLayout : React.FC<DefaultLayoutProps> = ({ children }) => {
   const location = useLocation();
-  const noLayoutPaths = ['/login', '/signup', '/forgot-password', '/create-shop'];
+  const noLayoutPaths = ['/login', '/signup', '/forgot-password', '/create-shop', '/checkout'];
 
   const isNoLayout = noLayoutPaths.includes(location.pathname);
 

@@ -2,56 +2,56 @@ import React, { useState } from 'react';
 import './ProductDetail.scss';
 
 interface Variant {
-  id: string;
-  name: string;
-  value: string;
-  image?: string;
+  variantId: string;
+  colorName?: string;
+  size?: string;
+  price: number;
+  stockQuantity: number;
+  imageUrl?: string;
 }
 
 interface ProductDetailProps {
-  title: string;
-  price: number;
+  productName: string;
   originalPrice?: number;
-  discountText?: string;
-  rating?: number;
+  imageUrls: string[];
+  variants?: Variant[];
   reviewCount?: number;
-  soldCount?: number;
-  media: string[];
+  salesCount?: number;
+  price: number;
+  stock: number;
   voucher?: string;
   shippingText?: string;
   assuranceText?: string;
-  variants?: Variant[];
-  stock: number;
+  rating?: number;
   onAddToCart: () => void;
   onBuyNow: () => void;
 }
 
 const ProductDetail: React.FC<ProductDetailProps> = ({
-  title,
+  productName,
   price,
   originalPrice,
-  discountText,
-  rating = 4.8,
-  reviewCount = 142,
-  soldCount = 159,
-  media,
+  imageUrls,
+  variants,
+  reviewCount = 0,
+  salesCount = 0,
+  stock,
   voucher,
   shippingText = "Free shipping",
   assuranceText = "30-day return guarantee",
-  variants,
-  stock,
+  rating = 4.5,
   onAddToCart,
   onBuyNow,
 }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [selectedVariants, setSelectedVariants] = useState<{ color?: string; size?: string }>({});
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
+      currency: 'VND',
+      minimumFractionDigits: 0,
     }).format(price);
   };
 
@@ -79,7 +79,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     <div className="product-detail">
       <div className="product-detail__gallery">
         <div className="gallery__thumbnails">
-          {media.map((image, index) => (
+          {imageUrls.map((image, index) => (
             <div
               key={index}
               className={`thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
@@ -89,26 +89,26 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             </div>
           ))}
         </div>
-        
+
         <div className="gallery__main">
           <div className="main-image">
-            <img src={media[selectedImageIndex]} alt={title} />
+            <img src={imageUrls[selectedImageIndex]} alt={productName} />
             <div className="image-controls">
-              <button 
+              <button
                 className="nav-btn prev"
-                onClick={() => setSelectedImageIndex(prev => prev > 0 ? prev - 1 : media.length - 1)}
+                onClick={() => setSelectedImageIndex(prev => prev > 0 ? prev - 1 : imageUrls.length - 1)}
               >
                 ❮
               </button>
-              <button 
+              <button
                 className="nav-btn next"
-                onClick={() => setSelectedImageIndex(prev => prev < media.length - 1 ? prev + 1 : 0)}
+                onClick={() => setSelectedImageIndex(prev => prev < imageUrls.length - 1 ? prev + 1 : 0)}
               >
                 ❯
               </button>
             </div>
             <div className="image-indicators">
-              {media.map((_, index) => (
+              {imageUrls.map((_, index) => (
                 <span
                   key={index}
                   className={`indicator ${selectedImageIndex === index ? 'active' : ''}`}
@@ -122,12 +122,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
       <div className="product-detail__info">
         <div className="info__header">
-          <h1 className="product-title">{title}</h1>
-          
+          <h1 className="product-title">{productName}</h1>
           <div className="seller-info">
-            <div className="seller-avatar">
-              <span>A</span>
-            </div>
+            <div className="seller-avatar"><span>A</span></div>
             <div className="seller-details">
               <div className="seller-name">Antonline</div>
               <div className="seller-stats">
@@ -140,39 +137,29 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
         <div className="info__pricing">
           <div className="price-main">{formatPrice(price)}</div>
-          <div className="price-vnd">Approximately {formatVND(price)}</div>
-          
           {originalPrice && (
             <div className="price-original">
-              <span className="original-price">{formatPrice(originalPrice)}</span>
-              {discountText && <span className="discount-badge">{discountText}</span>}
+              Giảm giá: <span className="original-price">{formatPrice(originalPrice)}</span>
             </div>
           )}
         </div>
 
         <div className="info__stats">
           <div className="stat-item">
-            <span className="stat-label">Rating:</span>
+            <span className="stat-label">Đánh giá:</span>
             <div className="rating-display">
               <div className="stars">
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} className={`star ${i < Math.floor(rating) ? 'filled' : ''}`}>
-                    ★
-                  </span>
+                  <span key={i} className={`star ${i < Math.floor(rating) ? 'filled' : ''}`}>★</span>
                 ))}
               </div>
               <span className="rating-number">({rating})</span>
             </div>
           </div>
-          
+
           <div className="stat-item">
-            <span className="stat-label">Condition:</span>
-            <span className="condition-badge">New</span>
-          </div>
-          
-          <div className="stat-item">
-            <span className="stat-label">Stock:</span>
-            <span className="stock-count">{stock} available</span>
+            <span className="stat-label">Kho:</span>
+            <span className="stock-count">Còn {stock}</span>
           </div>
         </div>
 
@@ -187,32 +174,45 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
         {variants && variants.length > 0 && (
           <div className="info__variants">
-            {variants.map((variant) => (
-              <div key={variant.id} className="variant-group">
-                <label className="variant-label">{variant.name}:</label>
-                <div className="variant-options">
+            {/* Hàng chọn màu */}
+            <div className="variant-group">
+              <label className="variant-label">Màu sắc:</label>
+              <div className="variant-options">
+                {[...new Set(variants.map(v => v.colorName))].map((color) => (
                   <button
-                    className={`variant-option ${selectedVariants[variant.id] === variant.value ? 'selected' : ''}`}
-                    onClick={() => handleVariantChange(variant.id, variant.value)}
+                    key={color}
+                    className={`variant-option ${selectedVariants.color === color ? 'selected' : ''}`}
+                    onClick={() => setSelectedVariants(prev => ({ ...prev, color }))}
                   >
-                    {variant.value}
+                    {color}
                   </button>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Hàng chọn dung lượng (size) */}
+            <div className="variant-group">
+              <label className="variant-label">Dung lượng:</label>
+              <div className="variant-options">
+                {[...new Set(variants.map(v => v.size))].map((size) => (
+                  <button
+                    key={size}
+                    className={`variant-option ${selectedVariants.size === size ? 'selected' : ''}`}
+                    onClick={() => setSelectedVariants(prev => ({ ...prev, size }))}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
+
         <div className="info__quantity">
-          <label className="quantity-label">Quantity:</label>
+          <label className="quantity-label">Số lượng:</label>
           <div className="quantity-controls">
-            <button 
-              className="quantity-btn"
-              onClick={() => handleQuantityChange(quantity - 1)}
-              disabled={quantity <= 1}
-            >
-              -
-            </button>
+            <button className="quantity-btn" onClick={() => handleQuantityChange(quantity - 1)} disabled={quantity <= 1}>-</button>
             <input
               type="number"
               className="quantity-input"
@@ -221,38 +221,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
               min="1"
               max={stock}
             />
-            <button 
-              className="quantity-btn"
-              onClick={() => handleQuantityChange(quantity + 1)}
-              disabled={quantity >= stock}
-            >
-              +
-            </button>
+            <button className="quantity-btn" onClick={() => handleQuantityChange(quantity + 1)} disabled={quantity >= stock}>+</button>
           </div>
-          <span className="sold-count">{soldCount} sold</span>
+          <span className="sold-count">{salesCount} Đã bán</span>
         </div>
 
         <div className="info__actions">
-          <button className="action-btn buy-now" onClick={onBuyNow}>
-            Buy It Now
-          </button>
-          <button className="action-btn add-to-cart" onClick={onAddToCart}>
-            Add to Cart
-          </button>
-          <button className="action-btn watchlist">
-            ♡ Add to Watchlist
-          </button>
-        </div>
-
-        <div className="info__features">
-          <div className="feature-item">
-            <span className="feature-icon">⚡</span>
-            <span className="feature-text">People want this. {reviewCount} people are watching this.</span>
-          </div>
-          <div className="feature-item">
-            <span className="feature-icon">🔥</span>
-            <span className="feature-text">This one's trending. {soldCount} have already sold.</span>
-          </div>
+          <button className="action-btn buy-now" onClick={onBuyNow}>Mua ngay nào!</button>
+          <button className="action-btn add-to-cart" onClick={onAddToCart}>Thêm vào giỏ hàng</button>
+          <button className="action-btn watchlist">♡ Yêu thích</button>
         </div>
 
         <div className="info__shipping">
@@ -270,4 +247,4 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   );
 };
 
-export default ProductDetail; 
+export default ProductDetail;

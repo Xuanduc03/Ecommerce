@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Table, 
-  Button, 
-  Space, 
-  Card, 
+import {
+  Table,
+  Button,
+  Space,
+  Card,
   Tag,
   Input,
   Row,
@@ -17,11 +17,11 @@ import {
   DatePicker,
   Divider
 } from 'antd';
-import { 
-  SearchOutlined, 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  SearchOutlined,
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   EllipsisOutlined,
   EyeOutlined,
   CheckOutlined,
@@ -35,17 +35,14 @@ import axios from 'axios';
 
 interface Seller {
   key: string;
-  userId?: string;
-  user: {
-    name: string;
-    email: string;
-  };
+  sellerId: string;
+  userId: string;
+  userFullName: string;
+  userEmail: string;
   description: string;
-  shop: {
-    name: string;
-  };
+  shopName: string | null;
   requestAt: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status: 'Chờ duyệt' | 'Đã duyệt' | 'Từ chối';
 }
 
 const SellerManagement: React.FC = () => {
@@ -106,12 +103,14 @@ const SellerManagement: React.FC = () => {
   const handleEdit = (record: Seller) => {
     setCurrentSeller(record);
     form.setFieldsValue({
-      ...record.user,
+      name: record.userFullName,
+      email: record.userEmail,
       description: record.description,
-      shopName: record.shop.name,
+      shopName: record.shopName,
       requestAt: record.requestAt ? dayjs(record.requestAt) : null,
       status: record.status,
     });
+
     setIsModalVisible(true);
   };
 
@@ -150,12 +149,13 @@ const SellerManagement: React.FC = () => {
         status: values.status,
       };
       if (currentSeller) {
-        await axios.put(`https://localhost:7040/api/admin/sellers/${currentSeller.userId}`, payload, {
+        await axios.put(`https://localhost:7040/api/admin/sellers/${currentSeller.sellerId}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         message.success('Cập nhật seller thành công');
       } else {
-        await axios.post(`https://localhost:7040/api/admin/sellers/create`, payload, {
+        await axios.post(`https://localhost:7040/api/admin/sellers`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         message.success('Thêm seller thành công');
@@ -169,28 +169,21 @@ const SellerManagement: React.FC = () => {
 
   const columns: ColumnsType<Seller> = [
     { title: 'STT', dataIndex: 'stt', key: 'stt', width: 80, align: 'center' },
-    { title: 'Tên người dùng', dataIndex: ['user', 'name'], key: 'userName', sorter: (a, b) => a.user.name.localeCompare(b.user.name) },
-    { title: 'Email', dataIndex: ['user', 'email'], key: 'email', width: 200 },
+    { title: 'Tên người dùng', dataIndex: 'userFullName', key: 'userFullName' },
+    { title: 'Email', dataIndex: 'userEmail', key: 'userEmail', width: 200 },
+    { title: "Trạng thái", dataIndex: 'status', key: 'status', width: 150 },
     { title: 'Mô tả đăng ký', dataIndex: 'description', key: 'description', ellipsis: true },
-    { title: 'Tên shop', dataIndex: ['shop', 'name'], key: 'shopName', render: (name) => name || <i>Chưa tạo</i>, width: 150 },
-    { title: 'Ngày yêu cầu', dataIndex: 'requestAt', key: 'requestAt', render: (date) => dayjs(date).format('DD/MM/YYYY'), width: 150, sorter: (a, b) => new Date(a.requestAt).getTime() - new Date(b.requestAt).getTime() },
-    { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 150, filters: [
-        { text: 'Đã duyệt', value: 'Approved' },
-        { text: 'Từ chối', value: 'Rejected' },
-        { text: 'Chờ duyệt', value: 'Pending' },
-      ], onFilter: (value, record) => record.status === value, render: (status) => {
-        const color = status === 'Approved' ? 'green' : status === 'Rejected' ? 'red' : 'orange';
-        const text = status === 'Approved' ? 'Đã duyệt' : status === 'Rejected' ? 'Từ chối' : 'Chờ duyệt';
-        return <Tag color={color}>{text}</Tag>;
-      }
+    { title: 'Tên shop', dataIndex: 'shopName', key: 'shopName', render: (name) => name || <i>Chưa tạo</i>, width: 150 },
+    { title: 'Ngày yêu cầu', dataIndex: 'requestAt', key: 'requestAt', render: (date) => dayjs(date).format('DD/MM/YYYY'), width: 150 },
+    {
+      title: 'Hành động', key: 'actions', width: 200, fixed: 'right', render: (_, record) => (
+        <Space>
+          <Button icon={<EyeOutlined />} onClick={() => handleView(record)}>Xem</Button>
+          <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>Sửa</Button>
+          <Button icon={<DeleteOutlined />} onClick={() => handleDelete(record.sellerId || record.key)}>Xóa</Button>
+        </Space>
+      )
     },
-    { title: 'Hành động', key: 'actions', width: 200, fixed: 'right', render: (_, record) => (
-      <Space>
-        <Button icon={<EyeOutlined />} onClick={() => handleView(record)}>Xem</Button>
-        <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>Sửa</Button>
-        <Button icon={<DeleteOutlined />} onClick={() => handleDelete(record.userId || record.key)}>Xóa</Button>
-      </Space>
-    )},
   ];
 
   const handleView = (record: Seller) => {
@@ -283,7 +276,7 @@ const SellerManagement: React.FC = () => {
           </Row>
           <Row gutter={16}>
             <Col span={24}>
-              <Form.Item name="description" label="Mô tả đăng ký" rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}>
+              <Form.Item name="description" label="Mô tả đăng ký">
                 <Input.TextArea placeholder="Nhập mô tả" />
               </Form.Item>
             </Col>

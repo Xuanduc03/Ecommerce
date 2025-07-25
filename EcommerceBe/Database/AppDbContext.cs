@@ -67,7 +67,7 @@ namespace EcommerceBe.Database
             modelBuilder.Entity<Seller>()
                 .HasOne(s => s.User)
                 .WithOne(u => u.Seller)
-                .HasForeignKey<Seller>(s => s.SellerId);
+                .HasForeignKey<Seller>(s => s.UserId);
 
             modelBuilder.Entity<Shop>()
                 .HasOne(s => s.Seller)

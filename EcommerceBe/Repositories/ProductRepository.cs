@@ -13,11 +13,25 @@ namespace EcommerceBe.Repositories
         {
             _context = context;
         }
+
+        public async Task<List<Product>> GetAllAsync()
+        {
+            return await _context.Products
+                .Include(p => p.ProductImages)
+                .Include(p => p.Variants)
+                .Include(p => p.ProductCategories)
+                    .ThenInclude(pc => pc.Category)
+                .Where(p => !p.IsDeleted) // loại bỏ sản phẩm đã xóa mềm
+                .ToListAsync();
+        }
+
         public async Task<Product?> GetByIdAsync(Guid productId)
         {
             return await _context.Products
                 .Include(p => p.ProductImages)
                 .Include(p => p.Variants)
+                 .Include(p => p.ProductCategories)
+            .ThenInclude(pc => pc.Category)
                 .FirstOrDefaultAsync(p => p.ProductId == productId);
         }
 
@@ -27,6 +41,8 @@ namespace EcommerceBe.Repositories
                 .Where(p => p.ShopId == shopId)
                 .Include(p => p.ProductImages)
                 .Include(p => p.Variants)
+                 .Include(p => p.ProductCategories)
+            .ThenInclude(pc => pc.Category)
                 .ToListAsync();
         }
 
@@ -38,9 +54,33 @@ namespace EcommerceBe.Repositories
 
         public async Task UpdateAsync(Product product)
         {
-            _context.Products.Update(product);
+            var existing = await _context.Products
+                .Include(p => p.ProductImages)
+                .Include(p => p.Variants)
+                .FirstOrDefaultAsync(p => p.ProductId == product.ProductId);
+
+            if (existing == null) return;
+
+            // Update scalar properties
+            _context.Entry(existing).CurrentValues.SetValues(product);
+
+            // Update Variants (xoá cũ, thêm mới)
+            existing.Variants.Clear();
+            foreach (var variant in product.Variants)
+            {
+                existing.Variants.Add(variant);
+            }
+
+            // Update Images (xoá cũ, thêm mới)
+            existing.ProductImages.Clear();
+            foreach (var img in product.ProductImages)
+            {
+                existing.ProductImages.Add(img);
+            }
+
             await _context.SaveChangesAsync();
         }
+
 
         public async Task DeleteAsync(Guid productId)
         {
@@ -93,12 +133,12 @@ namespace EcommerceBe.Repositories
 
             if (filter.MinPrice.HasValue)
             {
-                query = query.Where(p => p.Price >= filter.MinPrice);
+                query = query.Where(p => p.OriginalPrice >= filter.MinPrice);
             }
 
             if (filter.MaxPrice.HasValue)
             {
-                query = query.Where(p => p.Price <= filter.MaxPrice);
+                query = query.Where(p => p.OriginalPrice <= filter.MaxPrice);
             }
 
             return await query.ToListAsync();
@@ -143,10 +183,10 @@ namespace EcommerceBe.Repositories
                 query = query.Where(x => x.ProductCategories.Any(pc => queryDto.CategoryIds.Contains(pc.CategoryId)));
 
             if (queryDto.MinPrice.HasValue)
-                query = query.Where(x => x.Price >= queryDto.MinPrice.Value);
+                query = query.Where(x => x.OriginalPrice >= queryDto.MinPrice.Value);
 
             if (queryDto.MaxPrice.HasValue)
-                query = query.Where(x => x.Price <= queryDto.MaxPrice.Value);
+                query = query.Where(x => x.OriginalPrice <= queryDto.MaxPrice.Value);
 
             // Sorting
             if (!string.IsNullOrEmpty(queryDto.SortBy))
@@ -154,7 +194,7 @@ namespace EcommerceBe.Repositories
                 switch (queryDto.SortBy.ToLower())
                 {
                     case "price":
-                        query = queryDto.Descending ? query.OrderByDescending(x => x.Price) : query.OrderBy(x => x.Price);
+                        query = queryDto.Descending ? query.OrderByDescending(x => x.OriginalPrice) : query.OrderBy(x => x.OriginalPrice);
                         break;
                     case "createdat":
                         query = queryDto.Descending ? query.OrderByDescending(x => x.CreatedAt) : query.OrderBy(x => x.CreatedAt);

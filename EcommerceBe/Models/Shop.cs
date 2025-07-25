@@ -14,7 +14,8 @@ namespace EcommerceBe.Models
         // 1. Thông tin cơ bản
         public string Name { get; set; }          // Tên shop (bắt buộc)
         public string Description { get; set; }   // Mô tả ngắn
-        public string LogoUrl { get; set; }       // Logo shop (optional)
+        public string LogoUrl { get; set; }
+        public string? BannerUrl { get; set; } 
 
         // 2. Liên hệ tối thiểu
         public string ContactPhone { get; set; }  // SĐT liên hệ (bắt buộc)

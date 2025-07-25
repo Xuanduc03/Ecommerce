@@ -1,72 +1,124 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './ProductShopInfo.scss';
-import { FaRocketchat, FaShopware } from 'react-icons/fa';
+import { FaRocketchat, FaShopware, FaCalendarAlt, FaPhone, FaImage } from 'react-icons/fa';
+
+interface ShopInfo {
+  name?: string;
+  description?: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  contactPhone?: string;
+  createdAt?: string;
+}
 
 interface ProductShopInfoProps {
-  warehouse: number;
-  brand: string;
-  location: string;
-  breadcrumbs: string[];
-  shop: {
-    name: string;
-    rating: string;
-    responseRate: string;
-    products: number;
-    responseTime: string;
-    joined: string;
-    followers: string;
-    vouchers?: { value: string; condition: string; expiry: string }[];
-  };
+  shop?: ShopInfo | null;
 }
 
 const ProductShopInfo: React.FC<ProductShopInfoProps> = ({ shop }) => {
+  useEffect(() => {
+    console.log('Shop data:', shop);
+  }, [shop]);
+
+  if (!shop) {
+    return (
+      <div className="product-shop-info">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <span>Đang tải thông tin shop...</span>
+        </div>
+      </div>
+    );
+  }
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Error loading image:', e);
+    e.currentTarget.src = 'https://via.placeholder.com/80/e0e0e0/999999?text=Shop';
+  };
+
+  const handleBannerError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Error loading banner:', e);
+    e.currentTarget.src = 'https://via.placeholder.com/400x150/f5f5f5/999999?text=Banner';
+  };
+
   return (
     <div className="product-shop-info">
-      <div className="shop-summary">
-        <div className="shop-status">
-          <div className="shop-image">
+      <div className="shop-card">
+        {/* Shop Header */}
+        <div className="shop-header">
+          <div className="shop-avatar">
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" // Placeholder Apple logo
-              alt={shop.name}
+              src={shop.logoUrl || 'https://via.placeholder.com/80/e0e0e0/999999?text=Shop'}
+              alt={shop.name || 'Shop'}
+              onError={handleImageError}
+              className="shop-logo"
             />
-            <span className="shopee-mall">Shopee Mall</span>
           </div>
-          <div className="shop-info">
-            <div className="shop-name">
-              {shop.name} <span className="shop-subtitle">Authorised Reseller</span>
-              <br />
-              <span className="shop-online">Online 6 Giờ Trước</span>
-            </div>
-            <div className="shop-link">
-              <button className="shop-chat">
-                <FaRocketchat /> Chat Ngay
-              </button>
-              <button className="shop-view">
-                <FaShopware /> Xem Shop
-              </button>
+          
+          <div className="shop-details">
+            <h3 className="shop-name">{shop.name || 'Chưa có tên shop'}</h3>
+            <p className="shop-description">{shop.description || 'Chưa có mô tả về shop'}</p>
+            
+            <div className="shop-meta">
+              {shop.contactPhone && (
+                <div className="meta-item">
+                  <FaPhone className="meta-icon" />
+                  <span>{shop.contactPhone}</span>
+                </div>
+              )}
+              {shop.createdAt && (
+                <div className="meta-item">
+                  <FaCalendarAlt className="meta-icon" />
+                  <span>Tham gia {new Date(shop.createdAt).toLocaleDateString('vi-VN')}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
-        <div className="shop-stats">
-          <span>
-            Đánh Giá: <strong>{shop.rating}</strong>
-          </span>
-          <span>
-            Tỉ Lệ Phản Hồi: <strong>{shop.responseRate}</strong>
-          </span>
-          <span>
-            Sản Phẩm: <strong>{shop.products}</strong>
-          </span>
-          <span>
-            Thời Gian Phản Hồi: <strong>{shop.responseTime}</strong>
-          </span>
-          <span>
-            Tham Gia: <strong>{shop.joined}</strong>
-          </span>
-          <span>
-            Người Theo Dõi: <strong>{shop.followers}</strong>
-          </span>
+
+        {/* Action Buttons */}
+        <div className="shop-actions">
+          <button className="btn btn-chat">
+            <FaRocketchat className="btn-icon" />
+            <span>Chat Ngay</span>
+          </button>
+          <button className="btn btn-shop">
+            <FaShopware className="btn-icon" />
+            <span>Xem Shop</span>
+          </button>
         </div>
+
+        {/* Shop Banner */}
+        {shop.bannerUrl && (
+          <div className="shop-banner">
+            <div className="banner-container">
+              <img
+                src={shop.bannerUrl}
+                alt="Shop Banner"
+                onError={handleBannerError}
+                className="banner-image"
+              />
+              <div className="banner-overlay">
+                <FaImage className="banner-icon" />
+              </div>
+            </div>
+            
+            {/* Banner URL Display */}
+            <div className="banner-info">
+              <span className="banner-label">Banner URL:</span>
+              <div className="banner-url">
+                <code>{shop.bannerUrl}</code>
+                <button 
+                  className="copy-btn"
+                  onClick={() => navigator.clipboard.writeText(shop.bannerUrl || '')}
+                  title="Copy URL"
+                >
+                  📋
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,9 +4,9 @@
     {
         public Guid CartItemId { get; set; }
         public Guid CartId { get; set; }
-        public Guid ProductVariantId { get; set; }    // Hoặc ProductId nếu không dùng variant
+        public Guid ProductVariantId { get; set; }    
         public int Quantity { get; set; }
-        public decimal Price { get; set; }            // Giá tại thời điểm thêm vào cart
+        public decimal Price { get; set; }           
         public DateTime AddedAt { get; set; }
 
         public virtual Cart Cart { get; set; }

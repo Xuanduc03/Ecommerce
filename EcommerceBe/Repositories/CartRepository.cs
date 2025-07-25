@@ -7,7 +7,6 @@ namespace EcommerceBe.Repositories
 {
     public class CartRepository : ICartRepository
     {
-
         private readonly AppDbContext _context;
 
         public CartRepository(AppDbContext context)
@@ -15,20 +14,46 @@ namespace EcommerceBe.Repositories
             _context = context;
         }
 
-        public async Task<Cart?> GetCartByUserIdAsync(Guid userId)
+        public async Task<Cart?> GetCartByUserIdAsync(Guid userId, bool includeDetails = false)
         {
-            return await _context.Carts
-                .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.ProductVariant)
-                .FirstOrDefaultAsync(c => c.UserId == userId);
+            var query = _context.Carts.AsQueryable();
+
+            if (includeDetails)
+            {
+                query = query
+                    .Include(c => c.CartItems)
+                        .ThenInclude(ci => ci.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                    .Include(c => c.CartItems)
+                        .ThenInclude(ci => ci.ProductVariant.Product.ProductImages);
+            }
+            else
+            {
+                query = query.Include(c => c.CartItems);
+            }
+
+            return await query.FirstOrDefaultAsync(c => c.UserId == userId);
         }
 
-        public async Task<Cart?> GetCartByIdAsync(Guid cartId)
+        public async Task<Cart?> GetCartByIdAsync(Guid cartId, bool includeDetails = false)
         {
-            return await _context.Carts
-                .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.ProductVariant)
-                .FirstOrDefaultAsync(c => c.CartId == cartId);
+            var query = _context.Carts.AsQueryable();
+
+            if (includeDetails)
+            {
+                query = query
+                    .Include(c => c.CartItems)
+                        .ThenInclude(ci => ci.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                    .Include(c => c.CartItems)
+                        .ThenInclude(ci => ci.ProductVariant.Product.ProductImages);
+            }
+            else
+            {
+                query = query.Include(c => c.CartItems);
+            }
+
+            return await query.FirstOrDefaultAsync(c => c.CartId == cartId);
         }
 
         public async Task AddCartAsync(Cart cart)
@@ -55,15 +80,39 @@ namespace EcommerceBe.Repositories
 
         public async Task AddCartItemAsync(CartItem cartItem)
         {
-            await _context.CartItems.AddAsync(cartItem);
+            // Kiểm tra duplicate productVariantId để tránh trùng
+            var existingItem = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.CartId == cartItem.CartId && ci.ProductVariantId == cartItem.ProductVariantId);
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity += cartItem.Quantity;
+                existingItem.Price = cartItem.Price;
+                _context.CartItems.Update(existingItem);
+            }
+            else
+            {
+                await _context.CartItems.AddAsync(cartItem);
+            }
             await _context.SaveChangesAsync();
         }
 
-        public async Task<CartItem?> GetCartItemAsync(Guid cartItemId)
+        public async Task<CartItem?> GetCartItemAsync(Guid cartItemId, bool includeDetails = false)
         {
-            return await _context.CartItems
-                .Include(ci => ci.ProductVariant)
-                .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
+            var query = _context.CartItems.AsQueryable();
+
+            if (includeDetails)
+            {
+                query = query.Include(ci => ci.ProductVariant)
+                             .ThenInclude(pv => pv.Product)
+                             .Include(ci => ci.ProductVariant.Product.ProductImages);
+            }
+            else
+            {
+                query = query.Include(ci => ci.ProductVariant);
+            }
+
+            return await query.FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
         }
 
         public async Task UpdateCartItemAsync(CartItem cartItem)
@@ -72,12 +121,23 @@ namespace EcommerceBe.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteCartItemAsync(Guid cartItemId)
+        public async Task<CartItem?> DeleteCartItemAsync(Guid cartItemId)
         {
             var item = await _context.CartItems.FindAsync(cartItemId);
             if (item != null)
             {
                 _context.CartItems.Remove(item);
+                await _context.SaveChangesAsync();
+            }
+            return item; // trả về để service xử lý tồn kho
+        }
+
+        public async Task DeleteAllCartItemsAsync(Guid cartId)
+        {
+            var items = await _context.CartItems.Where(ci => ci.CartId == cartId).ToListAsync();
+            if (items.Any())
+            {
+                _context.CartItems.RemoveRange(items);
                 await _context.SaveChangesAsync();
             }
         }

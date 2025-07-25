@@ -327,6 +327,8 @@
 
     .info__variants {
       margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
 
       .variant-group {
         margin-bottom: 15px;

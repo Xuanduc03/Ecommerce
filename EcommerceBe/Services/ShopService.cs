@@ -1,4 +1,6 @@
-﻿using EcommerceBe.Models;
+﻿using EcommerceBe.Dto;
+using EcommerceBe.Models;
+using EcommerceBe.Repositories;
 using EcommerceBe.Repositories.Interfaces;
 using EcommerceBe.Services.Interfaces;
 
@@ -7,69 +9,123 @@ namespace EcommerceBe.Services
     public class ShopService : IShopService
     {
         private readonly IShopRepository _shopRepository;
+        private readonly ISellerRepository _sellerRepository;
 
-        public ShopService(IShopRepository shopRepository)
+        public ShopService(IShopRepository shopRepository, ISellerRepository sellerRepository)
         {
             _shopRepository = shopRepository;
+            _sellerRepository = sellerRepository;
         }
 
-        public async Task<Shop> GetShopByIdAsync(Guid shopId)
+        public async Task<CreateShopDto> GetShopByIdAsync(Guid shopId)
         {
             var shop = await _shopRepository.GetByIdAsync(shopId);
             if (shop == null)
                 throw new Exception("Shop not found");
-            return shop;
+            return new CreateShopDto { 
+                Name = shop.Name,
+                ContactPhone = shop.ContactPhone,
+                Description = shop.Description,
+                LogoUrl = shop.LogoUrl,
+                BannerUrl = shop.BannerUrl
+            };
         }
 
-        public async Task<Shop> GetShopBySellerIdAsync(Guid sellerId)
+        public async Task<ShopResponseDto> GetShopBySellerIdAsync(Guid sellerId)
         {
             var shop = await _shopRepository.GetBySellerIdAsync(sellerId);
             if (shop == null)
                 throw new Exception("Seller has not created a shop yet");
-            return shop;
+            return new ShopResponseDto
+            {
+                ShopId = shop.ShopId,
+                Name = shop.Name,
+                ContactPhone = shop.ContactPhone,
+                Description = shop.Description,
+                LogoUrl = shop.LogoUrl,
+                BannerUrl = shop.BannerUrl
+            };
         }
 
-        public async Task<List<Shop>> GetAllShopsAsync()
+        public async Task<List<ShopResponseDto>> GetAllShopsAsync()
         {
-            return await _shopRepository.GetAllAsync();
+            var shops = await _shopRepository.GetAllAsync();
+            return shops.Select(shop => new ShopResponseDto
+            {
+                ShopId = shop.ShopId,
+                SellerId = shop.SellerId,
+                Name = shop.Name,
+                ContactPhone = shop.ContactPhone,
+                Description = shop.Description,
+                LogoUrl = shop.LogoUrl,
+                BannerUrl = shop.BannerUrl
+            }).ToList();
         }
 
-        public async Task CreateShopAsync(Shop shop, Guid sellerId)
+        public async Task CreateShopAsync(CreateShopDto dto, Guid sellerId)
         {
-            var existingShop = await _shopRepository.GetBySellerIdAsync(sellerId);
-            if (existingShop != null)
-                throw new Exception("Seller already has a shop");
+            try
+            {
+                var seller = await _sellerRepository.GetByIdAsync(sellerId);
+                if (seller == null)
+                {
+                    throw new Exception($"Seller not found for ID {sellerId}");
+                }
 
-            shop.SellerId = sellerId;
-            shop.ShopId = Guid.NewGuid();
-            shop.CreatedAt = DateTime.UtcNow;
-            await _shopRepository.AddAsync(shop);
+                // Kiểm tra seller đã có shop chưa
+                var existingShop = await _shopRepository.GetBySellerIdAsync(sellerId);
+                if (existingShop != null)
+                    throw new Exception("Seller already has a shop");
+
+                // Tạo shop mới
+                var shop = new Shop
+                {
+                    ShopId = Guid.NewGuid(),
+                    SellerId = sellerId,
+                    Name = dto.Name,
+                    Description = dto.Description,
+                    ContactPhone = dto.ContactPhone,
+                    LogoUrl = dto.LogoUrl,
+                    BannerUrl = dto.BannerUrl,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _shopRepository.AddAsync(shop);
+
+                // Gán ShopId vào seller để liên kết
+                seller.ShopId = shop.ShopId;
+                await _sellerRepository.UpdateAsync(seller);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error in CreateShopAsync: {ex.Message}", ex);
+            }
+            
         }
 
-        public async Task UpdateShopAsync(Shop shop, Guid sellerId)
+
+        public async Task UpdateShopAsync(UpdateShopDto shop)
         {
             var existingShop = await _shopRepository.GetByIdAsync(shop.ShopId);
             if (existingShop == null)
                 throw new Exception("Shop not found");
 
-            if (existingShop.SellerId != sellerId)
-                throw new UnauthorizedAccessException("You do not own this shop");
-
-            // Cập nhật thông tin được phép
+            // Bỏ kiểm tra sellerId
             existingShop.Name = shop.Name;
+            existingShop.ContactPhone = shop.ContactPhone;
+            existingShop.LogoUrl = shop.LogoUrl;
+            existingShop.BannerUrl = shop.BannerUrl;
             existingShop.Description = shop.Description;
 
             await _shopRepository.UpdateAsync(existingShop);
         }
 
-        public async Task DeleteShopAsync(Guid shopId, Guid sellerId)
+
+        public async Task DeleteShopAsync(Guid shopId)
         {
             var shop = await _shopRepository.GetByIdAsync(shopId);
             if (shop == null)
                 throw new Exception("Shop not found");
-
-            if (shop.SellerId != sellerId)
-                throw new UnauthorizedAccessException("You do not own this shop");
 
             await _shopRepository.DeleteAsync(shopId);
         }

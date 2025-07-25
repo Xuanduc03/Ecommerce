@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace EcommerceBe.Models
     {
         public Guid SellerId { get; set; }
         public string Status { get; set; }
+        [ForeignKey("UserId")]
         public Guid UserId { get; set; }
         public string? Description { get; set; }
         public Guid? ShopId { get; set; }

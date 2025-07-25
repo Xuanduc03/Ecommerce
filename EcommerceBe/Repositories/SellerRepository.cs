@@ -26,8 +26,20 @@ namespace EcommerceBe.Repositories
 
         public async Task<Seller?> GetByIdAsync(Guid sellerId)
         {
-            return await _context.Sellers.FirstOrDefaultAsync(u => u.SellerId == sellerId);
+            return await _context.Sellers
+                .Include(s => s.User)
+                .Include(s => s.Shop)
+                .FirstOrDefaultAsync(u => u.SellerId == sellerId);
         }
+
+        public async Task<Seller?> GetByUserIdAsync(Guid userId)
+        {
+            return await _context.Sellers
+                .Include(s => s.User)
+                .Include(s => s.Shop)
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+        }
+
 
         // them user
         public async Task AddAsync(Seller seller)
@@ -35,22 +47,25 @@ namespace EcommerceBe.Repositories
             await _context.Sellers.AddAsync(seller);
         }
         // cap nhat user
-        public async Task UpdateAsync(Seller seller)
+        public Task UpdateAsync(Seller seller)
         {
             _context.Sellers.Update(seller);
+            return Task.CompletedTask;
         }
+
         public async Task<int> SaveChangeAsync()
         {
             return await _context.SaveChangesAsync();
         }
         // xóa người dùng only admin
-        public async Task DeleteAsync(Guid userId)
+        public async Task DeleteAsync(Guid sellerId)
         {
-            var user = await GetByIdAsync(userId);
-            if (user != null)
+            var seller = await GetByIdAsync(sellerId);
+            if (seller != null)
             {
-                await UpdateAsync(user);
+                _context.Sellers.Remove(seller);
             }
         }
+
     }
 }

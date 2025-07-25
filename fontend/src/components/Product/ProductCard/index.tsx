@@ -9,10 +9,11 @@ export interface ProductCardProps {
   currentPrice: number;
   discount: number;
   image: string;
-  badge?: string; 
+  badge?: string;
   sold: number;
   rating: number;
-  isFlashSale?: boolean; 
+  isFlashSale?: boolean;
+  features?: string[];
 }
 
 export const ProductCard: React.FC<{ product: ProductCardProps }> = ({ product }) => {
@@ -23,37 +24,62 @@ export const ProductCard: React.FC<{ product: ProductCardProps }> = ({ product }
   };
 
   return (
-    <div className="product-card" onClick={handleClick} style={{ cursor: 'pointer' }}>
+    <div className="product-card" onClick={handleClick}>
+      {/* Product Image */}
       <div className="product-image">
         <img src={product.image} alt={product.name} />
+
+        {/* Discount Badge */}
         {product.discount > 0 && (
-          <div className="discount-badge">-{product.discount}%</div>
-        )}
-        {product.badge && (
-          <div className={`product-badge ${product.badge === 'Bán chạy' ? 'hot' : 'favorite'}`}>
-            {product.badge}
-          </div>
-        )}
-        {product.isFlashSale && (
-          <div className="flash-sale-badge">
-            <span>Flash Sale 12:00 Thứ 5</span>
+          <div className="discount-badge">
+            -{product.discount}%
           </div>
         )}
       </div>
+
+      {/* Product Info */}
       <div className="product-info">
+        {/* Product Name */}
         <h3 className="product-name">{product.name}</h3>
-        <div className="product-price">
-          <span className="current-price">₫{product.currentPrice.toLocaleString()}</span>
+
+        {/* Features */}
+        {product.features && (
+          <div className="product-features">
+            {product.features.join(' • ')}
+          </div>
+        )}
+
+        {/* Price Section */}
+        <div className="price-section">
+          <div className="current-price">
+            {product.currentPrice.toLocaleString()}₫
+          </div>
+
           {product.originalPrice > product.currentPrice && (
-            <span className="original-price">₫{product.originalPrice.toLocaleString()}</span>
+            <div className="price-discount">
+              <span className="original-price">
+                {product.originalPrice.toLocaleString()}₫
+              </span>
+              <span className="discount-percent">
+                -{product.discount}%
+              </span>
+            </div>
           )}
         </div>
+
+        {/* Gift Info */}
+        <div className="gift-info">
+          Quà <strong>500.000₫</strong>
+        </div>
+
+        {/* Rating and Sales */}
         <div className="product-stats">
-          <span className="sold">Đã bán {product.sold}k</span>
-          <div className="rating">
-            <span>★★★★★</span>
-            <span className="rating-value">({product.rating})</span>
-          </div>
+          <span className="rating">
+            ★ {product.rating}
+          </span>
+          <span className="sold">
+            • Đã bán {product.sold}k
+          </span>
         </div>
       </div>
     </div>

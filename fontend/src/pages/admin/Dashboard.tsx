@@ -1,9 +1,8 @@
-import { Card, Row, Col, Statistic, Progress, Table, Divider } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Divider } from 'antd';
 import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   StarFilled,
-  ShoppingCartOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
@@ -36,7 +35,7 @@ const AdminDashboard = () => {
       shape: 'diamond',
     },
     tooltip: {
-      formatter: (data : any) => {
+      formatter: (data: any) => {
         return { name: 'Sales', value: '$' + data.value };
       },
     },

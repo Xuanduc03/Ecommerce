@@ -81,15 +81,31 @@ namespace EcommerceBe.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<string>("Description")
-                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("MetaDescription")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("MetaTitle")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<Guid?>("ParentCategoryId")
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("Slug")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasColumnType("longtext");
 
                     b.HasKey("CategoryId");
 
@@ -273,7 +289,7 @@ namespace EcommerceBe.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<decimal>("Price")
+                    b.Property<decimal>("OriginalPrice")
                         .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("ProductName")
@@ -316,12 +332,12 @@ namespace EcommerceBe.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<bool>("IdPrimary")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("char(36)");
@@ -418,6 +434,7 @@ namespace EcommerceBe.Migrations
             modelBuilder.Entity("EcommerceBe.Models.Seller", b =>
                 {
                     b.Property<Guid>("SellerId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<DateTime?>("ApprovedAt")
@@ -445,6 +462,9 @@ namespace EcommerceBe.Migrations
                     b.HasKey("SellerId");
 
                     b.HasIndex("ShopId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId")
                         .IsUnique();
 
                     b.ToTable("Sellers");
@@ -839,15 +859,15 @@ namespace EcommerceBe.Migrations
 
             modelBuilder.Entity("EcommerceBe.Models.Seller", b =>
                 {
-                    b.HasOne("EcommerceBe.Models.User", "User")
-                        .WithOne("Seller")
-                        .HasForeignKey("EcommerceBe.Models.Seller", "SellerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("EcommerceBe.Models.Shop", "Shop")
                         .WithOne("Seller")
                         .HasForeignKey("EcommerceBe.Models.Seller", "ShopId");
+
+                    b.HasOne("EcommerceBe.Models.User", "User")
+                        .WithOne("Seller")
+                        .HasForeignKey("EcommerceBe.Models.Seller", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Shop");
 

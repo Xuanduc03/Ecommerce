@@ -72,15 +72,10 @@ namespace EcommerceBe.Repositories
         {
             return await _context.SaveChangesAsync();
         }
-        // xóa người dùng only admin
-        public async Task DeleteAsync(Guid userId)
+        public async Task DeleteAsync(User user)
         {
-            var user = await GetByIdAsync(userId);
-            if (user != null)
-            {
-                user.IsActive = false;
-                await UpdateAsync(user);
-            }
+            _context.Users.Remove(user);
+            await Task.CompletedTask;
         }
     }
 }

@@ -5,6 +5,7 @@ namespace EcommerceBe.Repositories.Interfaces
 {
     public interface IProductRepository
     {
+        Task<List<Product>> GetAllAsync();
         Task<Product?> GetByIdAsync(Guid productId);
         Task<List<Product>> GetByShopIdAsync(Guid shopId);
         Task AddAsync(Product product);

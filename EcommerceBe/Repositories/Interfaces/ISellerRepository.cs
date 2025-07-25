@@ -10,5 +10,7 @@ namespace EcommerceBe.Repositories.Interfaces
         Task<int> SaveChangeAsync();
         Task<List<Seller>> GetAllSellerAsync(string? search, int page, int pageSize);
         Task<Seller?> GetByIdAsync(Guid sellerId);
+        Task<Seller?> GetByUserIdAsync(Guid userId);
+
     }
 }

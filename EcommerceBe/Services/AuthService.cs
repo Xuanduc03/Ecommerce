@@ -50,50 +50,56 @@ namespace EcommerceBe.Services
         // Gửi yêu cầu đăng ký
         public async Task<bool> RequestRegisterAsync(RegisterDto model)
         {
-            var existingUser = await _repo.GetByEmailAsync(model.Email);
-            if (existingUser != null)
+            try
             {
-                throw new Exception("Người dùng đã tồn tại");
-            }
+                // 1. Check email trùng
+                if (await _repo.GetByEmailAsync(model.Email) is not null)
+                    throw new InvalidOperationException("Email đã được sử dụng.");
 
-            var userId = Guid.NewGuid();
+                var userId = Guid.NewGuid();
 
-            var newUser = new User
-            {
-                UserId = userId,
-                Email = model.Email,
-                Username = model.Username,
-                PhoneNumber = model.PhoneNumber,
-                Password = BCrypt.Net.BCrypt.HashPassword(model.Password),
-                Role = model.Role,
-                IsActive = true,
-                CreateAt = DateTime.UtcNow,
-            };
-
-            await _repo.AddAsync(newUser);
-            await _repo.SaveChangeAsync();
-
-            if (model.Role == UserRole.Seller)
-            {
-                var now = DateTime.UtcNow;
-
-                var seller = new Seller
+                var newUser = new User
                 {
-                    SellerId = Guid.NewGuid(),
                     UserId = userId,
-                    Status = "Pending",
-                    RequestAt = now,
-                    ShopId = null,
-                    CreateAt = now,
-                    Description = model.Description ?? "",
-                    ApprovedAt = DateTime.MinValue
+                    Email = model.Email,
+                    Username = model.Username,
+                    PhoneNumber = model.PhoneNumber,
+                    Password = BCrypt.Net.BCrypt.HashPassword(model.Password),
+                    Role = model.Role,
+                    IsActive = true,
+                    CreateAt = DateTime.UtcNow,
                 };
-                await _seller.AddAsync(seller);
-                await _seller.SaveChangeAsync();
+
+                await _repo.AddAsync(newUser);
+                await _repo.SaveChangeAsync();
+
+                // 2. Nếu là Seller, tạo Seller record, ShopId = null
+                if (model.Role == UserRole.Seller)
+                {
+                    var seller = new Seller
+                    {
+                        SellerId = Guid.NewGuid(),
+                        UserId = userId,
+                        Status = "Chờ duyệt", 
+                        ShopId = null, 
+                        RequestAt = DateTime.UtcNow,
+                        CreateAt = DateTime.UtcNow,
+                        ApprovedAt = null
+                    };
+
+                    await _seller.AddAsync(seller);
+                    await _seller.SaveChangeAsync();
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại sau.");
             }
 
-            return true;
         }
+
 
 
         public async Task<bool> ForgotPasswordAsync(ForgotPasswordRequest model)

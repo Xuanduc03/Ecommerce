@@ -54,11 +54,10 @@ namespace EcommerceBe.Controllers
             return Ok(user);
         }
         [HttpPut("{userId}")]
-        public async Task<IActionResult> UpdateUser([FromBody] AdminUpdateUser model)
+        public async Task<IActionResult> UpdateUser(Guid userId, [FromBody] AdminUpdateUser model)
         {
             try
             {
-                var userId = GetUserIdFromToken();
                 var result = await _adminUserService.UpdateUserAsync(userId, model);
                 return Ok(new { success = result });
             }
@@ -81,8 +80,13 @@ namespace EcommerceBe.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
-            await _adminUserService.DeleteUserAsync(id);
-            return NoContent();
+            var success = await _adminUserService.DeleteUserAsync(id);
+            if (!success)
+            {
+                return NotFound(new { message = "Người dùng không tồn tại." });
+            }
+
+            return Ok(new { message = "Xóa người dùng thành công." });
         }
 
         private Guid GetUserIdFromToken()

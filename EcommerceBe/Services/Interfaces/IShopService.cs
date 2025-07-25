@@ -6,11 +6,11 @@ namespace EcommerceBe.Services.Interfaces
 {
     public interface IShopService
     {
-        Task<Shop> GetShopByIdAsync(Guid shopId);
-        Task<Shop> GetShopBySellerIdAsync(Guid sellerId);
-        Task<List<Shop>> GetAllShopsAsync();
-        Task CreateShopAsync(Shop shop, Guid sellerId);
-        Task UpdateShopAsync(Shop shop, Guid sellerId);
-        Task DeleteShopAsync(Guid shopId, Guid sellerId );
+        Task<CreateShopDto> GetShopByIdAsync(Guid shopId);
+        Task<ShopResponseDto> GetShopBySellerIdAsync(Guid sellerId);
+        Task<List<ShopResponseDto>> GetAllShopsAsync();
+        Task CreateShopAsync(CreateShopDto shop, Guid sellerId);
+        Task UpdateShopAsync(UpdateShopDto shop);
+        Task DeleteShopAsync(Guid shopId);
     }
 }

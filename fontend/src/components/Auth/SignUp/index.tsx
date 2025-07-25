@@ -13,7 +13,6 @@ interface SignUpData {
   password: string;
   role: number;
   accountType: "personal" | "business";
-
 }
 
 const initialData: SignUpData = {
@@ -25,7 +24,6 @@ const initialData: SignUpData = {
   accountType: "personal",
 };
 
-
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<SignUpData>(initialData);
@@ -34,26 +32,20 @@ const SignUp: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isFocused, setIsFocused] = useState<{ [key: string]: boolean }>({
     username: false,
-    phone: false,
+    phoneNumber: false,
     email: false,
     password: false,
   });
 
   const handleFocus = (fieldName: string) => {
-    setIsFocused(prev => ({
-      ...prev,
-      [fieldName]: true
-    }));
+    setIsFocused((prev) => ({ ...prev, [fieldName]: true }));
   };
 
   const handleBlur = (fieldName: string) => {
-    setIsFocused(prev => ({
-      ...prev,
-      [fieldName]: false
-    }));
+    setIsFocused((prev) => ({ ...prev, [fieldName]: false }));
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setFormErrors((prev) => ({ ...prev, [name]: "" }));
@@ -63,30 +55,25 @@ const SignUp: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       accountType: type,
-      role: type === "personal" ? 0 : 1, // ← 0 và 1 là number
+      role: type === "personal" ? 0 : 1,
     }));
   };
 
-
-
   const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-    if (!/^[a-zA-ZÀ-ỹ\s]+$/.test(formData.username))
-      newErrors.username = "Tên chỉ được chứa chữ cái và khoảng trắng";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      newErrors.email = "Email không hợp lệ";
-    if (!/^\+?\d{10,15}$/.test(formData.phoneNumber))
-      newErrors.phoneNumber = "Số điện thoại không hợp lệ";
-    if (formData.password.length < 6)
-      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+    const errors: { [key: string]: string } = {};
+    if (!formData.username) errors.username = "Tên không được để trống";
+    if (!formData.phoneNumber) errors.phoneNumber = "Số điện thoại không được để trống";
+    if (!formData.email) errors.email = "Email không được để trống";
+    if (!formData.password) errors.password = "Mật khẩu không được để trống";
 
-    setFormErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) return;
+
     setLoading(true);
     try {
       const response = await axios.post<{ success: boolean; message?: string }>(

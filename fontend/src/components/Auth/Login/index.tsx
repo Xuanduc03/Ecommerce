@@ -46,9 +46,9 @@ const Login: React.FC = () => {
     if (!data.Email.trim()) errors.Email = "Vui lòng nhập email";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.Email))
       errors.email = "Email không hợp lệ";
-    if (!data.Password) 
+    if (!data.Password)
       errors.Password = "Vui lòng nhập mật khẩu";
-     if (data.Password.length < 6)
+    if (data.Password.length < 6)
       errors.Password = "Mật khẩu phải có ít nhất 6 ký tự";
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -82,8 +82,39 @@ const Login: React.FC = () => {
             navigate("/admin");
             break;
           case "seller":
-            navigate("/seller");
+            try {
+              const token = response.data.token;
+
+              const sellerRes = await axios.get("https://localhost:7040/api/seller/me", {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              const seller = sellerRes.data;
+
+              if (!seller || !seller.sellerId) {
+                toast.error("Không tìm thấy thông tin seller");
+                return;
+              }
+              localStorage.setItem('sellerId', seller.sellerId);
+              try {
+                await axios.get(`https://localhost:7040/api/seller/shops/${seller.sellerId}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+
+                navigate("/seller");
+              } catch (shopErr: any) {
+                if (shopErr.response?.status === 404) {
+                  navigate("/create-shop");
+                } else {
+                  toast.error("Không thể kiểm tra shop");
+                  navigate("/seller");
+                }
+              }
+            } catch (sellerErr: any) {
+              toast.error("Không thể kiểm tra seller");
+              navigate("/seller");
+            }
             break;
+
           default:
             navigate("/");
         }
@@ -165,7 +196,7 @@ const Login: React.FC = () => {
           <button type="submit" className={styles.submitButton} disabled={loading}>
             {loading ? "Đang đăng nhập..." : "Tiếp tục"}
           </button>
-          
+
         </form>
       </div>
     </div>
