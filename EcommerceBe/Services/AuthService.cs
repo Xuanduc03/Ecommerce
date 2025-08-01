@@ -161,7 +161,11 @@ namespace EcommerceBe.Services
             return new UserProfileDto
             {
                 UserId = user.UserId,
+                AvatarUrl = user.AvatarUrl,
+                FullName = user.FullName,
                 Email = user.Email,
+                Gender = user.Gender,
+                DateOfBirth = user.DateOfBirth,
                 Username = user.Username,
                 PhoneNumber = user.PhoneNumber,
             };
@@ -175,6 +179,11 @@ namespace EcommerceBe.Services
                 throw new InvalidOperationException("Không tìm thấy người dùng.");
 
             user.Username = model.Username;
+            user.Email = model.Email;
+            user.Gender = model.Gender;
+            user.DateOfBirth = model.DateOfBirth;
+            user.FullName = model.FullName;
+            user.AvatarUrl = model.AvatarUrl;
             user.PhoneNumber = model.PhoneNumber;
             user.UpdatedAt = DateTime.UtcNow;
 
@@ -183,8 +192,33 @@ namespace EcommerceBe.Services
 
             return true;
         }
-    
-    private string GenerateOtp()
+
+        public async Task<bool> ChangePasswordAsync(Guid userId, ChangePasswordDto model)
+        {
+            // 1. Kiểm tra người dùng tồn tại
+            var user = await _repo.GetByIdAsync(userId);
+            if (user == null)
+                throw new InvalidOperationException("Người dùng không tồn tại.");
+
+            // 2. Xác thực mật khẩu hiện tại
+            if (!BCrypt.Net.BCrypt.Verify(model.CurrentPassword, user.Password))
+                throw new InvalidOperationException("Mật khẩu hiện tại không chính xác.");
+
+            // 3. Kiểm tra mật khẩu mới không trùng với mật khẩu cũ
+            if (BCrypt.Net.BCrypt.Verify(model.NewPassword, user.Password))
+                throw new InvalidOperationException("Mật khẩu mới phải khác mật khẩu hiện tại.");
+
+            // 4. Cập nhật mật khẩu mới
+            user.Password = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _repo.UpdateAsync(user);
+            await _repo.SaveChangeAsync();
+
+            return true;
+        }
+
+        private string GenerateOtp()
     {
         var random = new Random();
         return random.Next(100000, 999999).ToString();

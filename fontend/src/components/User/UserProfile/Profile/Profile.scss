@@ -1,0 +1,494 @@
+// Variables
+$primary-color: #2563eb;
+$primary-hover: #1d4ed8;
+$secondary-color: #64748b;
+$success-color: #059669;
+$border-color: #e2e8f0;
+$border-radius: 12px;
+$border-radius-sm: 8px;
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin input-focus {
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+}
+
+.user-profile-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 2rem 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  .main-content {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: $shadow-lg;
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+  }
+
+  .profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 2rem;
+    text-align: center;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      position: relative;
+      z-index: 1;
+      letter-spacing: -0.5px;
+    }
+
+    p {
+      font-size: 1.1rem;
+      margin: 0;
+      opacity: 0.9;
+      position: relative;
+      z-index: 1;
+      font-weight: 300;
+    }
+  }
+
+  .profile-form {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 3rem;
+    padding: 3rem 2rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      padding: 2rem 1rem;
+    }
+  }
+
+  .form-section {
+    .form-group {
+      margin-bottom: 2rem;
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #1f2937;
+        font-size: 0.95rem;
+        letter-spacing: 0.3px;
+      }
+
+      .readonly-field {
+        display: block;
+        padding: 1rem;
+        background: #f8fafc;
+        border: 2px solid #e5e7eb;
+        border-radius: $border-radius-sm;
+        color: $secondary-color;
+        font-weight: 500;
+        font-size: 0.95rem;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border: 2px solid #e5e7eb;
+        border-radius: $border-radius-sm;
+        font-size: 1rem;
+        background: white;
+        transition: $transition;
+        color: #1f2937;
+        
+        @include input-focus;
+
+        &::placeholder {
+          color: #9ca3af;
+        }
+
+        &:hover {
+          border-color: #d1d5db;
+        }
+      }
+
+      .input-with-action {
+        @include flex-between;
+        gap: 1rem;
+
+        .masked-value {
+          flex: 1;
+          padding: 1rem 1.25rem;
+          background: #f8fafc;
+          border: 2px solid #e5e7eb;
+          border-radius: $border-radius-sm;
+          color: #1f2937;
+          font-weight: 500;
+        }
+
+        .change-btn {
+          padding: 1rem 1.5rem;
+          background: $primary-color;
+          color: white;
+          border: none;
+          border-radius: $border-radius-sm;
+          font-weight: 600;
+          cursor: pointer;
+          transition: $transition;
+          white-space: nowrap;
+          font-size: 0.9rem;
+
+          &:hover {
+            background: $primary-hover;
+            transform: translateY(-1px);
+            box-shadow: $shadow-md;
+          }
+        }
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+
+        .radio-option {
+          @include flex-center;
+          gap: 0.5rem;
+          cursor: pointer;
+          font-weight: 500;
+          color: #1f2937;
+
+          input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            accent-color: $primary-color;
+            cursor: pointer;
+          }
+
+          &:hover {
+            color: $primary-color;
+          }
+        }
+      }
+
+      .date-select {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        position: relative;
+
+        .select-input {
+          padding: 1rem 1.25rem;
+          border: 2px solid #e5e7eb;
+          border-radius: $border-radius-sm;
+          background: white;
+          font-size: 1rem;
+          cursor: pointer;
+          appearance: none;
+          color: #1f2937;
+          transition: $transition;
+          
+          @include input-focus;
+
+          &:hover {
+            border-color: #d1d5db;
+          }
+        }
+
+        .select-icon {
+          position: absolute;
+          right: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          pointer-events: none;
+          color: $secondary-color;
+          
+          &:nth-of-type(2) {
+            right: calc(66.666% + 0.5rem);
+          }
+          
+          &:nth-of-type(3) {
+            right: calc(33.333% + 0.25rem);
+          }
+        }
+
+        @media (max-width: 480px) {
+          grid-template-columns: 1fr;
+          
+          .select-icon {
+            position: relative;
+            right: auto;
+            top: auto;
+            transform: none;
+            margin-left: auto;
+          }
+        }
+      }
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: end;
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group {
+        margin-bottom: 2rem;
+
+        label {
+          margin-bottom: 0.75rem;
+          height: auto;
+        }
+
+        &:first-child {
+          // Đây là ô "Tên" (lastName)
+          label {
+            visibility: visible;
+          }
+        }
+
+        &:last-child {
+          // Đây là ô "firstName" - ẩn label để căn hàng
+          label {
+            visibility: hidden;
+            height: 1.5rem; // Giữ nguyên chiều cao để layout không bị lệch
+            margin-bottom: 0.75rem;
+          }
+        }
+
+        .form-input {
+          width: 100%;
+        }
+      }
+    }
+
+    .form-actions {
+      margin-top: 2rem;
+
+      .save-btn {
+        background: linear-gradient(135deg, $success-color 0%, #047857 100%);
+        color: white;
+        border: none;
+        padding: 1.25rem 3rem;
+        border-radius: $border-radius;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: $transition;
+        box-shadow: $shadow-md;
+        letter-spacing: 0.5px;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: $shadow-lg;
+          background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  .avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 2rem;
+    border-radius: $border-radius;
+    border: 2px dashed #e5e7eb;
+    transition: $transition;
+
+    &:hover {
+      border-color: $primary-color;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    }
+
+    .avatar-upload {
+      position: relative;
+      margin-bottom: 1.5rem;
+
+      img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: $shadow-lg;
+        transition: $transition;
+      }
+
+      .upload-btn {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        @include flex-center;
+        width: 40px;
+        height: 40px;
+        background: $primary-color;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: $transition;
+        box-shadow: $shadow-md;
+        border: 3px solid white;
+
+        &:hover {
+          background: $primary-hover;
+          transform: scale(1.1);
+        }
+      }
+    }
+
+    .avatar-info {
+      p {
+        font-weight: 600;
+        margin: 0 0 0.75rem 0;
+        color: #1f2937;
+        font-size: 1.1rem;
+      }
+
+      small {
+        display: block;
+        color: $secondary-color;
+        margin-bottom: 0.25rem;
+        font-size: 0.85rem;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  // Loading state
+  div:has-text("Đang tải hồ sơ...") {
+    @include flex-center;
+    height: 200px;
+    font-size: 1.2rem;
+    color: $secondary-color;
+    font-weight: 500;
+  }
+
+  // Responsive improvements
+  @media (max-width: 640px) {
+    padding: 1rem 0.5rem;
+
+    .main-content {
+      border-radius: 16px;
+      margin: 0;
+    }
+
+    .profile-header {
+      padding: 2rem 1rem;
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      p {
+        font-size: 1rem;
+      }
+    }
+
+    .avatar-section {
+      .avatar-upload img {
+        width: 100px;
+        height: 100px;
+      }
+
+      .upload-btn {
+        width: 35px;
+        height: 35px;
+      }
+    }
+  }
+
+  // Animation for form elements
+  @keyframes slideInFromLeft {
+    0% {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .form-group {
+    animation: slideInFromLeft 0.5s ease-out;
+    animation-fill-mode: both;
+
+    @for $i from 1 through 10 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.1}s;
+      }
+    }
+  }
+
+  // Hover effects for interactive elements
+  .form-input,
+  .select-input {
+    &:focus {
+      transform: translateY(-1px);
+    }
+  }
+
+  .change-btn,
+  .save-btn {
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    &:hover::before {
+      left: 100%;
+    }
+  }
+}

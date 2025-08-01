@@ -44,7 +44,7 @@ public class ProductService : IProductService
         return products.Select(MapToResponse).ToList();
 
     }
-
+    // Tạo sản phẩm
     public async Task CreateProductAsync(CreateProductDto dto)
     {
         // Validation
@@ -106,33 +106,14 @@ public class ProductService : IProductService
         await _productRepository.AddAsync(product);
     }
 
+    // Chỉnh sửa sản phẩm
     public async Task UpdateProductAsync(Guid productId, CreateProductDto dto)
     {
-        var existing = await _productRepository.GetByIdAsync(productId);
-        if (existing == null)
-            throw new NotFoundException($"Product with ID {productId} not found");
-
-        // Validation
-        await ValidateCreateProductDto(dto);
-
-        // Update basic properties
-        existing.ProductName = dto.ProductName;
-        existing.Description = dto.Description;
-        existing.OriginalPrice = dto.OriginalPrice;
-        existing.UpdatedAt = DateTime.UtcNow;
-
-        // Update Images
-        await UpdateProductImages(existing, dto.ImageUrls);
-
-        // Update Variants
-        await UpdateProductVariants(existing, dto.Variants);
-
-        // Update categories
-        await UpdateProductCategories(existing, dto.CategoryId, dto.SubcategoryId);
-
-        await _productRepository.UpdateAsync(existing);
+        await ValidateUpdateProductDto(dto);
+        await _productRepository.UpdateAsync(productId, dto);
     }
 
+    // xóa sản phẩm
     public async Task DeleteProductAsync(Guid productId)
     {
         var existing = await _productRepository.GetByIdAsync(productId);
@@ -144,12 +125,18 @@ public class ProductService : IProductService
         existing.IsActive = false;
         existing.UpdatedAt = DateTime.UtcNow;
 
-        await _productRepository.UpdateAsync(existing);
+        await _productRepository.DeleteAsync(productId);
     }
 
-    public async Task<List<ProductResponseDto>> SearchProductsAsync(ProductFilterDto filter)
+    public async Task<List<ProductResponseDto>> SearchProductsAsync(string keyword)
     {
-        var products = await _productRepository.SearchProductsAsync(filter);
+        var products = await _productRepository.SearchProductsAsync(keyword);
+        return products.Select(MapToResponse).ToList();
+    }
+
+    public async Task<List<ProductResponseDto>> GetProductsByCategoryAsync(Guid categoryId)
+    {
+        var products = await _productRepository.GetProductsByCategoryTreeAsync(categoryId);
         return products.Select(MapToResponse).ToList();
     }
 
@@ -161,6 +148,11 @@ public class ProductService : IProductService
             throw new NotFoundException("Seller does not have a shop");
 
         return await _productRepository.GetInventoryByShopIdAsync(shop.ShopId);
+    }
+    public async Task<List<ProductResponseDto>> GetTopProductsByCategoryAsync(Guid categoryId, int count = 10)
+    {
+        var products = await _productRepository.GetTopProductsByCategoryAsync(categoryId, count);
+        return products.Select(MapToResponse).ToList();
     }
 
     public async Task<PagedResultDto<ProductResponseDto>> QueryProductsAsync(ProductQueryDto queryDto)
@@ -176,109 +168,48 @@ public class ProductService : IProductService
 
     private async Task ValidateCreateProductDto(CreateProductDto dto)
     {
-        // Validate Shop exists
-        if (!dto.ShopId.HasValue)
-        {
-            throw new ArgumentException("ShopId is required");
-        }
+        // bắt buộc có ShopId & ảnh
+        if (!dto.ShopId.HasValue) throw new ArgumentException("ShopId is required");
+        await EnsureShopExists(dto.ShopId.Value);
 
-        var shop = await _shopRepository.GetByIdAsync(dto.ShopId.Value);
+        await EnsureCategoryExists(dto.CategoryId, dto.SubcategoryId);
 
-
-        // Validate Categories exist
-        var category = await _categoryRepository.GetByIdAsync(dto.CategoryId);
-        if (category == null)
-            throw new NotFoundException($"Category with ID {dto.CategoryId} not found");
-
-        var subcategory = await _categoryRepository.GetByIdAsync(dto.SubcategoryId);
-        if (subcategory == null)
-            throw new NotFoundException($"Subcategory with ID {dto.SubcategoryId} not found");
-
-        // Validate business rules
-        if (dto.OriginalPrice <= 0)
-            throw new ArgumentException("Price must be greater than 0");
-
+        if (dto.OriginalPrice <= 0) throw new ArgumentException("Price must be greater than 0");
         if (dto.Variants == null || !dto.Variants.Any())
             throw new ArgumentException("Product must have at least one variant");
-
         if (dto.ImageUrls == null || !dto.ImageUrls.Any())
             throw new ArgumentException("Product must have at least one image");
     }
 
-    private async Task UpdateProductImages(Product product, List<string> newImageUrls)
+    private async Task ValidateUpdateProductDto(CreateProductDto dto)
     {
-        // Remove old images
-        product.ProductImages.Clear();
+        await EnsureCategoryExists(dto.CategoryId, dto.SubcategoryId);
 
-        // Add new images
-        for (int i = 0; i < newImageUrls.Count; i++)
-        {
-            product.ProductImages.Add(new ProductImages
-            {
-                ProductImageId = Guid.NewGuid(),
-                ProductId = product.ProductId,
-                ImageUrl = newImageUrls[i],
-                IsPrimary = i == 0 // First image is primary
-            });
-        }
+        if (dto.OriginalPrice <= 0) throw new ArgumentException("Price must be greater than 0");
+        if (dto.Variants == null || !dto.Variants.Any())
+            throw new ArgumentException("Product must have at least one variant");
+    }
+    private async Task EnsureCategoryExists(Guid catId, Guid subId)
+    {
+        if (await _categoryRepository.GetByIdAsync(catId) == null)
+            throw new NotFoundException($"Category {catId} not found");
+        if (await _categoryRepository.GetByIdAsync(subId) == null)
+            throw new NotFoundException($"Sub‑category {subId} not found");
+    }
+    private async Task EnsureShopExists(Guid shopId)
+    {
+        var shop = await _shopRepository.GetByIdAsync(shopId);
+        if (shop == null) throw new NotFoundException($"Shop with ID {shopId} not found");
     }
 
-    private async Task UpdateProductVariants(Product product, List<CreateProductVariantDto> newVariants)
-    {
-        // Keep track of existing variants to preserve ViewsCount and SalesCount
-        var existingVariantLookup = product.Variants.ToDictionary(
-            v => $"{v.Size}-{v.ColorCode}",
-            v => v
-        );
-
-        product.Variants.Clear();
-
-        foreach (var newVariant in newVariants)
-        {
-            var key = $"{newVariant.Size}-{newVariant.ColorCode}";
-            var existingVariant = existingVariantLookup.GetValueOrDefault(key);
-
-            product.Variants.Add(new ProductVariant
-            {
-                ProductVariantId = existingVariant?.ProductVariantId ?? Guid.NewGuid(),
-                ProductId = product.ProductId,
-                Size = newVariant.Size,
-                ColorCode = newVariant.ColorCode,
-                ColorName = newVariant.ColorName,
-                StockQuantity = newVariant.StockQuantity,
-                Price = newVariant.Price,
-                BrandNew = newVariant.BrandNew,
-                Features = newVariant.Features,
-                SeoDescription = newVariant.SeoDescription,
-                // ✅ Preserve existing data
-                ViewsCount = existingVariant?.ViewsCount ?? 0,
-                SalesCount = existingVariant?.SalesCount ?? 0
-            });
-        }
-    }
-
-    private async Task UpdateProductCategories(Product product, Guid categoryId, Guid subcategoryId)
-    {
-        product.ProductCategories.Clear();
-
-        product.ProductCategories.Add(new ProductCategories
-        {
-            ProductId = product.ProductId,
-            CategoryId = categoryId
-        });
-
-        product.ProductCategories.Add(new ProductCategories
-        {
-            ProductId = product.ProductId,
-            CategoryId = subcategoryId
-        });
-    }
 
     private ProductResponseDto MapToResponse(Product p)
     {
         var categories = p.ProductCategories.ToList();
         var category = categories.FirstOrDefault(); // cha
         var subcategory = categories.Skip(1).FirstOrDefault(); // con
+
+        int totalStock = p.Variants.Sum(v => v.StockQuantity);
 
         return new ProductResponseDto
         {
@@ -293,9 +224,11 @@ public class ProductService : IProductService
             CategoryName = category?.Category?.Name ?? string.Empty,
             SubcategoryId = subcategory?.CategoryId ?? Guid.Empty,
             SubcategoryName = subcategory?.Category?.Name ?? string.Empty,
+            StockQuantity = totalStock,
             ImageUrls = p.ProductImages.Select(img => img.ImageUrl).ToList(),
             Variants = p.Variants.Select(v => new ProductVariantResponseDto
             {
+                VariantId = v.ProductVariantId,
                 Size = v.Size,
                 ColorCode = v.ColorCode,
                 ColorName = v.ColorName,

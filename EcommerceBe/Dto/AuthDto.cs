@@ -49,22 +49,20 @@ namespace EcommerceBe.Dto
     //user profile dto 
     public class UserProfileDto
     {
+        public string? FullName { get; set; }
+        public string? AvatarUrl { get; set; }
         public Guid UserId { get; set; }
+        public bool? Gender {  get; set; }
+        public DateTime? DateOfBirth { get; set; }
         public string Email { get; set; }
         public string Username { get; set; }
         public string PhoneNumber { get; set; }
-        public string Role { get; set; }
       
     }
 
     //update profile dto
-    public class UpdateUserProfileDto
+    public class UpdateUserProfileDto : UserProfileDto
     {
-        [Required]
-        public string Username { get; set; }
-
-        [Required]
-        public string PhoneNumber { get; set; }
     }
 
     // admin update user
@@ -77,6 +75,13 @@ namespace EcommerceBe.Dto
         public bool IsVerified { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool IsActive { get; set; }
+    }
+
+    public class ChangePasswordDto
+    {
+        public string CurrentPassword { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmNewPassword { get; set; }
     }
 
 }

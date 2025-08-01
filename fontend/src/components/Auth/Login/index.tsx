@@ -119,10 +119,10 @@ const Login: React.FC = () => {
             navigate("/");
         }
       } else {
-        throw new Error(response.data.message || "Đăng nhập thất bại");
+        toast.error(response.data.message || "Đăng nhập thất bại");
       }
     } catch (error: any) {
-      toast.error(error?.message || "Lỗi đăng nhập");
+      toast.error("Lỗi đăng nhập tên tài khoản hay mật khẩu không đúng");
     } finally {
       setLoading(false);
     }

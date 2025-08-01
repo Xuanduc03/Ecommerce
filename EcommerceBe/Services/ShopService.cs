@@ -17,17 +17,20 @@ namespace EcommerceBe.Services
             _sellerRepository = sellerRepository;
         }
 
-        public async Task<CreateShopDto> GetShopByIdAsync(Guid shopId)
+        public async Task<ShopResponseDto> GetShopByIdAsync(Guid shopId)
         {
             var shop = await _shopRepository.GetByIdAsync(shopId);
             if (shop == null)
                 throw new Exception("Shop not found");
-            return new CreateShopDto { 
+            return new ShopResponseDto
+            { 
+                ShopId = shop.ShopId,
                 Name = shop.Name,
                 ContactPhone = shop.ContactPhone,
                 Description = shop.Description,
                 LogoUrl = shop.LogoUrl,
-                BannerUrl = shop.BannerUrl
+                BannerUrl = shop.BannerUrl,
+                CreatedAt = shop.CreatedAt
             };
         }
 
@@ -54,11 +57,13 @@ namespace EcommerceBe.Services
             {
                 ShopId = shop.ShopId,
                 SellerId = shop.SellerId,
+                SellerName = shop.Seller?.User?.Username,
                 Name = shop.Name,
                 ContactPhone = shop.ContactPhone,
                 Description = shop.Description,
                 LogoUrl = shop.LogoUrl,
-                BannerUrl = shop.BannerUrl
+                BannerUrl = shop.BannerUrl,
+                CreatedAt = shop.CreatedAt
             }).ToList();
         }
 
@@ -116,6 +121,7 @@ namespace EcommerceBe.Services
             existingShop.LogoUrl = shop.LogoUrl;
             existingShop.BannerUrl = shop.BannerUrl;
             existingShop.Description = shop.Description;
+            existingShop.IsActive = shop.IsActive;
 
             await _shopRepository.UpdateAsync(existingShop);
         }

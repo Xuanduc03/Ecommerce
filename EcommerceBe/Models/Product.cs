@@ -12,6 +12,7 @@ namespace EcommerceBe.Models
         public Guid? ShopId { get; set; }
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; }
+        public int StockQuantity { get; set; }
 
         public virtual Shop Shop { get; set; }
         public virtual ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();

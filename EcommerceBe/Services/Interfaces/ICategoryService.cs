@@ -6,6 +6,7 @@ namespace EcommerceBe.Services.Interfaces
     {
         Task<List<CategoryDto>> GetAllAsync();
         Task<CategoryDto?> GetByIdAsync(Guid id);
+        Task<CategoryDto?> GetBySlug(string slug);
         Task<bool> CreateAsync(CreateCategoryDto dto);
         Task<bool> UpdateAsync(Guid id, UpdateCategoryDto dto);
         Task<bool> DeleteAsync(Guid id);

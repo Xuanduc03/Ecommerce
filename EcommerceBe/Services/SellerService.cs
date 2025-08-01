@@ -61,6 +61,8 @@ namespace EcommerceBe.Services
             };
         }
 
+
+
         public async Task<SellerDto?> GetSellerByIdAsync(Guid sellerId)
         {
             var seller = await _context.Sellers
@@ -94,7 +96,7 @@ namespace EcommerceBe.Services
                 UserId = sellerDto.UserId,
                 Description = sellerDto.Description,
                 ShopId = sellerDto.ShopId,
-                Status = "Pending",
+                Status = "Chờ duyệt",
                 RequestAt = DateTime.UtcNow,
                 CreateAt = DateTime.UtcNow
             };
@@ -138,7 +140,7 @@ namespace EcommerceBe.Services
             if (seller == null) return false;
 
             seller.Status = newStatus;
-            seller.ApprovedAt = newStatus == "Approved" ? DateTime.UtcNow : seller.ApprovedAt;
+            seller.ApprovedAt = newStatus == "Đã duyệt" ? DateTime.UtcNow : seller.ApprovedAt;
             await _context.SaveChangesAsync();
             return true;
         }

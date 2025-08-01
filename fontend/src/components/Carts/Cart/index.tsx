@@ -1,4 +1,3 @@
-// Cart.tsx
 import React from "react";
 import classNames from "classnames/bind";
 import styles from "./Cart.module.scss";
@@ -7,46 +6,54 @@ import { type CartItemProps } from "../CartItem";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart, removeFromCart } from "../../../redux/cartSlice";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const cx = classNames.bind(styles);
 
 const Cart: React.FC = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state: any) => state.cart.items);
-  const isAuthenticated = false; // Thay bằng logic xác thực thực tế
+  const navigate = useNavigate();
 
+  const token = localStorage.getItem("authToken");
   const handleRemoveItem = (id: string) => {
     dispatch(removeFromCart(id));
-    toast.info("Item removed from cart");
+    toast.info("Đã xóa sản phẩm khỏi giỏ hàng");
   };
 
   const handleSaveForLater = (id: string) => {
-    toast.info("Item saved for later");
+    toast.info("Đã lưu sản phẩm để mua sau");
   };
 
   const handleClearCart = () => {
     dispatch(clearCart());
-    toast.success("Cart cleared");
+    toast.success("Đã xóa toàn bộ giỏ hàng");
   };
 
   const totalPrice = cartItems.reduce(
-    (sum: number, item: CartItemProps["item"]) => sum + item.price,
+    (sum: number, item: CartItemProps["item"]) => sum + item.price * item.quantity,
     0
   );
 
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      toast.error("Giỏ hàng trống, không thể thanh toán!");
+      return;
+    }
+    navigate("/checkout", { state: { cartItems, totalPrice } });
+  };
+
   return (
     <div className={cx("cart-container")}>
-      <h1 className={cx("cart-title")}>Shopping cart</h1>
+      <h1 className={cx("cart-title")}>Giỏ hàng</h1>
 
-      {!isAuthenticated && (
+      {!token && (
         <div className={cx("auth-notice")}>
-          You're signed out right now. To save these items or see your previously saved items, sign in.
+          Bạn chưa đăng nhập. Đăng nhập để lưu lại các sản phẩm hoặc xem các sản phẩm đã lưu trước đó.
         </div>
       )}
 
       <div className={cx("cart-content")}>
-        {/* Danh sách sản phẩm */}
         <div className={cx("cart-items")}>
           {cartItems.length > 0 ? (
             <>
@@ -60,38 +67,39 @@ const Cart: React.FC = () => {
               ))}
 
               <div className={cx("cart-subtotal")}>
-                <span>Item ({cartItems.length})</span>
+                <span>Số lượng ({cartItems.length})</span>
                 <span>{totalPrice.toLocaleString()} VND</span>
               </div>
+              <button className={cx("clear-cart-btn")} onClick={handleClearCart}>
+                Xóa toàn bộ giỏ hàng
+              </button>
             </>
           ) : (
-            <div className={cx("empty-cart")}>Your cart is empty</div>
+            <div className={cx("empty-cart")}>Giỏ hàng của bạn đang trống</div>
           )}
         </div>
 
-        {/* Tổng kết đơn hàng */}
         <div className={cx("cart-summary")}>
           <div className={cx("summary-content")}>
-            <h3>Subtotal</h3>
+            <h3>Tạm tính</h3>
             <div className={cx("total-price")}>{totalPrice.toLocaleString()} VND</div>
 
-            <button className={cx("checkout-btn")}>
-              Go to checkout
+            <button className={cx("checkout-btn")} onClick={handleCheckout}>
+              Thanh toán
             </button>
 
             <div className={cx("payment-info")}>
-              <p>Purchase protected by eBay Money Back Guarantee</p>
-              <p>Earn up to 5X points with your eBay Mastercard®</p>
-              <Link to="/">See details</Link>
+              <p>Mua hàng được bảo vệ bởi Chính sách hoàn tiền</p>
+              <p>Nhận điểm thưởng khi thanh toán qua thẻ tín dụng</p>
+              <Link to="/">Xem chi tiết</Link>
             </div>
           </div>
         </div>
       </div>
 
       <div className={cx("related-items")}>
-        <h3>Explore related items</h3>
-        <p>Sponsored</p>
-        {/* Thêm danh sách sản phẩm liên quan ở đây */}
+        <h3>Khám phá sản phẩm liên quan</h3>
+        <p>Tài trợ</p>
       </div>
     </div>
   );

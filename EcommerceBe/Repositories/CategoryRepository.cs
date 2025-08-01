@@ -2,6 +2,7 @@
 using EcommerceBe.Models;
 using EcommerceBe.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Crypto.Operators;
 
 namespace EcommerceBe.Repositories
 {
@@ -24,7 +25,13 @@ namespace EcommerceBe.Repositories
         {
             return await _context.Categories
                 .Include(c => c.SubCategories)
+                .Include(c => c.ParentCategory)
                 .FirstOrDefaultAsync(c => c.CategoryId == id);
+        }
+
+        public async Task<Category?> GetSlugAsync(string slug)
+        {
+            return await _context.Categories.Include(c => c.SubCategories).FirstOrDefaultAsync(c => c.Slug == slug);
         }
 
         public async Task AddAsync(Category category)

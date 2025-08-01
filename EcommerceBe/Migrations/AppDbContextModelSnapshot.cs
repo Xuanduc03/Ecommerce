@@ -220,7 +220,7 @@ namespace EcommerceBe.Migrations
                     b.Property<Guid>("ProductId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid>("ProductVariantId")
+                    b.Property<Guid?>("ProductVariantId")
                         .HasColumnType("char(36)");
 
                     b.Property<int>("Quantity")
@@ -296,8 +296,11 @@ namespace EcommerceBe.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<Guid>("ShopId")
+                    b.Property<Guid?>("ShopId")
                         .HasColumnType("char(36)");
+
+                    b.Property<int>("StockQuantity")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -470,34 +473,6 @@ namespace EcommerceBe.Migrations
                     b.ToTable("Sellers");
                 });
 
-            modelBuilder.Entity("EcommerceBe.Models.SellerReport", b =>
-                {
-                    b.Property<Guid>("SellerReportId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("ShopId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("TotalOrders")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TotalRevenue")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.HasKey("SellerReportId");
-
-                    b.HasIndex("ShopId");
-
-                    b.ToTable("SellerReports");
-                });
-
             modelBuilder.Entity("EcommerceBe.Models.ShippingAddress", b =>
                 {
                     b.Property<Guid>("Id")
@@ -555,6 +530,9 @@ namespace EcommerceBe.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("BannerUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("ContactPhone")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -591,17 +569,23 @@ namespace EcommerceBe.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreateAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime>("DateOfBirth")
+                    b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<bool>("Gender")
+                    b.Property<string>("FullName")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool?>("Gender")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsActive")
@@ -758,15 +742,11 @@ namespace EcommerceBe.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcommerceBe.Models.ProductVariant", "ProductVariant")
+                    b.HasOne("EcommerceBe.Models.ProductVariant", null)
                         .WithMany("OrderItems")
-                        .HasForeignKey("ProductVariantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductVariantId");
 
                     b.Navigation("Order");
-
-                    b.Navigation("ProductVariant");
 
                     b.Navigation("product");
                 });
@@ -790,9 +770,7 @@ namespace EcommerceBe.Migrations
 
                     b.HasOne("EcommerceBe.Models.Shop", "Shop")
                         .WithMany("Products")
-                        .HasForeignKey("ShopId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ShopId");
 
                     b.Navigation("Shop");
                 });
@@ -872,17 +850,6 @@ namespace EcommerceBe.Migrations
                     b.Navigation("Shop");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("EcommerceBe.Models.SellerReport", b =>
-                {
-                    b.HasOne("EcommerceBe.Models.Shop", "Shop")
-                        .WithMany()
-                        .HasForeignKey("ShopId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Shop");
                 });
 
             modelBuilder.Entity("EcommerceBe.Models.ShippingAddress", b =>

@@ -83,7 +83,7 @@ const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
       children: [
         { key: '/seller/products', icon: null, label: 'Sản phẩm của tôi' },
         { key: "/seller/product/add", icon: null, label: 'Thêm sản phẩm mới' },
-        { key: '/seller/products/suggested', icon: null, label: 'Sản phẩm đề xuất' }
+        { key: '/seller/product/reviews', icon: null, label: 'Xem các đánh giá' }
       ]
     },
     {
@@ -136,7 +136,7 @@ const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
             style={{ width: 32, height: 32, marginRight: 12 }}
           />
           <Title level={4} style={{ color: 'white', margin: 0, fontWeight: 'bold' }}>
-            Trung tâm Người bán Shopee
+            Trung tâm Người bán 
           </Title>
         </div>
         <Space>

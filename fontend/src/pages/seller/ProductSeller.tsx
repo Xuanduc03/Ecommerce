@@ -19,7 +19,8 @@ import {
   message,
   Form,
   Popconfirm,
-  Upload
+  Upload,
+  InputNumber
 } from 'antd';
 import {
   SearchOutlined,
@@ -90,7 +91,6 @@ const stockStatusOptions = [
   { value: 'out_of_stock', label: 'Hết hàng' }
 ];
 
-
 const ProductSeller: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -100,6 +100,7 @@ const ProductSeller: React.FC = () => {
   const [parentCategories, setParentCategories] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     status: '',
@@ -174,42 +175,29 @@ const ProductSeller: React.FC = () => {
     if (shopId) fetchProducts(shopId);
   }, [shopId]);
 
-
-  // Thêm biến thể mới
-  const addVariant = () => {
-  const current = editForm.getFieldValue('variants') || [];
-  editForm.setFieldsValue({
-    variants: [
-      ...current,
-      { 
-        size: '', 
-        colorCode: '#000000', 
-        colorName: '', 
-        stockQuantity: 0, 
-        price: 0, 
-        brandNew: true,
-        features: '',
-        seoDescription: '' 
-      }
-    ]
-  });
-};
-
-  // Xóa biến thể theo index
-  const removeVariant = (index: number) => {
-    const current = editForm.getFieldValue('variants') || [];
-    if (current.length > index) {
-      current.splice(index, 1);
-      editForm.setFieldsValue({ variants: [...current] });
+  // Handle image upload similar to the first component
+  const handleUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await axios.post("https://localhost:7040/api/product/image", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setImageUrls((prev) => [...prev, res.data.imageUrl]);
+      message.success("Ảnh đã tải lên");
+    } catch {
+      message.error("Tải ảnh thất bại");
     }
+    return false;
   };
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    setImageUrls(product.imageUrls || []);
 
-    // Tìm category và subcategory names từ ID
-    const category = categories.find(c => c.categoryId === product.categoryId);
-    const subcategory = categories.find(c => c.categoryId === product.subcategoryId);
 
     editForm.setFieldsValue({
       productName: product.productName,
@@ -217,7 +205,6 @@ const ProductSeller: React.FC = () => {
       originalPrice: product.originalPrice,
       categoryId: product.categoryId,
       subcategoryId: product.subcategoryId,
-      // Load variants data vào form
       variants: product.variants.map(variant => ({
         size: variant.size,
         colorCode: variant.colorCode,
@@ -228,14 +215,14 @@ const ProductSeller: React.FC = () => {
         features: variant.features,
         seoDescription: variant.seoDescription,
       })),
-      // Xử lý imageUrls cho Upload component
-      imageUrls: product.imageUrls.map((url, index) => ({
-        uid: `${index}`,
-        name: `image_${index}.jpg`,
-        status: 'done',
-        url: url,
-      })),
     });
+
+    // Set subcategories based on selected category
+    const selectedCategory = product.categoryId;
+    if (selectedCategory) {
+      setSubcategories(categories.filter((c) => c.parentCategoryId === selectedCategory));
+    }
+
     setIsEditModalOpen(true);
   };
 
@@ -244,39 +231,22 @@ const ProductSeller: React.FC = () => {
       const values = await editForm.validateFields();
       if (!editingProduct) return;
 
-      // Xử lý imageUrls từ Upload component
-      const imageUrls = values.imageUrls?.map((file: any) => {
-        if (file.url) return file.url; // existing images
-        if (file.response?.url) return file.response.url; // newly uploaded
-        return file.thumbUrl || file.preview; // fallback
-      }).filter(Boolean) || [];
-
-      // Xử lý variants data
-      const variants = values.variants?.map((variant: any) => ({
-        size: variant.size,
-        colorCode: variant.colorCode || '#000000',
-        colorName: variant.colorName,
-        stockQuantity: parseInt(variant.stockQuantity) || 0,
-        price: parseFloat(variant.price) || 0,
-        brandNew: variant.brandNew ?? true,
-        features: variant.features || '',
-        seoDescription: variant.seoDescription || '',
-      })) || [];
-
-      const updateData = {
-        productName: values.productName,
-        description: values.description,
-        originalPrice: parseFloat(values.originalPrice),
-        categoryId: values.categoryId,
-        subcategoryId: values.subcategoryId,
+      const payload = {
+        ...values,
         imageUrls,
-        variants,
-        shopId: editingProduct.shopId, // keep existing shopId
+        variants: (values.variants || []).map((v: any) => ({
+          ...v,
+          colorCode: v.colorName?.toLowerCase().replace(/\s+/g, "-"),
+          price: v.price || values.originalPrice,
+          features: v.features || "",
+          seoDescription: v.seoDescription || "",
+        })),
+        shopId: editingProduct.shopId,
       };
 
       await axios.put(
         `https://localhost:7040/api/product/${editingProduct.productId}`,
-        updateData,
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -284,12 +254,14 @@ const ProductSeller: React.FC = () => {
       setIsEditModalOpen(false);
       editForm.resetFields();
       setEditingProduct(null);
+      setImageUrls([]);
       if (shopId) fetchProducts(shopId);
     } catch (error: any) {
       console.error('Update error:', error);
       message.error(error.response?.data?.message || 'Không thể cập nhật sản phẩm');
     }
   };
+
   // Filtered products
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
@@ -331,7 +303,6 @@ const ProductSeller: React.FC = () => {
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-
 
   const handleHide = (product: Product) => {
     Modal.confirm({
@@ -545,97 +516,204 @@ const ProductSeller: React.FC = () => {
         />
       </Card>
 
-      {/* modal edit product */}
+      {/* Modal edit product - Updated to match first component logic */}
       <Modal
         title="Chỉnh sửa sản phẩm"
         open={isEditModalOpen}
-        onCancel={() => setIsEditModalOpen(false)}
+        onCancel={() => {
+          setIsEditModalOpen(false);
+          editForm.resetFields();
+          setEditingProduct(null);
+          setImageUrls([]);
+        }}
         onOk={handleSaveEdit}
-        width={800}
-        okText="Lưu"
+        width={900}
+        okText="Cập nhật"
         cancelText="Hủy"
       >
-        <Form layout="vertical" form={editForm} initialValues={{ variants: [] }}>
-          <Form.Item
-            label="Tên sản phẩm"
-            name="productName"
-            rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
-          >
-            <Input />
-          </Form.Item>
+        <Form form={editForm} layout="vertical">
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Tên sản phẩm"
+                name="productName"
+                rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
+              >
+                <Input placeholder="Nhập tên sản phẩm" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Giá gốc"
+                name="originalPrice"
+                rules={[{ required: true, message: 'Vui lòng nhập giá gốc' }]}
+              >
+                <InputNumber
+                  min={0}
+                  style={{ width: "100%" }}
+                  placeholder="Nhập giá gốc"
+                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="categoryId"
+                label="Danh mục chính"
+                rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
+              >
+                <Select
+                  placeholder="Chọn danh mục"
+                  onChange={(value) => {
+                    editForm.setFieldsValue({ subcategoryId: undefined });
+                    setSubcategories(categories.filter((c) => c.parentCategoryId === value));
+                  }}
+                >
+                  {parentCategories.map((c) => (
+                    <Select.Option key={c.categoryId} value={c.categoryId}>
+                      {c.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="subcategoryId"
+                label="Danh mục phụ"
+                rules={[{ required: true, message: "Vui lòng chọn danh mục phụ" }]}
+              >
+                <Select placeholder="Chọn danh mục phụ" disabled={!subcategories.length}>
+                  {subcategories.map((s) => (
+                    <Select.Option key={s.categoryId} value={s.categoryId}>
+                      {s.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item label="Mô tả" name="description">
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={3} placeholder="Nhập mô tả sản phẩm" />
           </Form.Item>
 
-          <Form.Item
-            label="Giá gốc"
-            name="originalPrice"
-            rules={[{ required: true, message: 'Vui lòng nhập giá gốc' }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-
-          <Form.Item label="Danh mục" name="categoryId" rules={[{ required: true, message: 'Chọn danh mục' }]}>
-            <Select>
-              {categories.map(c => <Option key={c} value={c}>{c}</Option>)}
-            </Select>
-          </Form.Item>
-
-          <Form.Item label="Danh mục con" name="subcategoryId" rules={[{ required: true, message: 'Chọn danh mục con' }]}>
-            <Select>
-              {categories.map(c => <Option key={c} value={c}>{c}</Option>)}
-            </Select>
-          </Form.Item>
-
-
-          <Form.Item label="Ảnh sản phẩm" name="imageUrls" valuePropName="fileList" getValueFromEvent={(e) => e.fileList}>
-            <Upload listType="picture-card" beforeUpload={() => false} multiple>
-              <div>
-                <UploadOutlined /> Upload
-              </div>
+          <Form.Item label="Ảnh sản phẩm">
+            <Upload beforeUpload={handleUpload} showUploadList={false} multiple>
+              <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
             </Upload>
+            <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {imageUrls.map((url, i) => (
+                <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
+                  <img
+                    src={url}
+                    style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 4, border: '1px solid #d9d9d9' }}
+                    alt={`Product ${i + 1}`}
+                  />
+                  <Button
+                    size="small"
+                    type="text"
+                    danger
+                    style={{
+                      position: 'absolute',
+                      top: -5,
+                      right: -5,
+                      minWidth: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      background: '#ff4d4f',
+                      color: 'white',
+                      border: 'none'
+                    }}
+                    onClick={() => setImageUrls(prev => prev.filter((_, index) => index !== i))}
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+            </div>
           </Form.Item>
 
-          <Divider>Biến thể</Divider>
+          <Divider>Biến thể sản phẩm</Divider>
           <Form.List name="variants">
-            {(fields) => (
+            {(fields, { add, remove }) => (
               <>
-                {fields.map(({ key, name }) => (
-                  <Row key={key} gutter={8} style={{ marginBottom: 8, alignItems: 'center' }}>
-                    <Col span={4}>
-                      <Form.Item name={[name, 'size']} rules={[{ required: true }]} noStyle>
-                        <Input placeholder="Size" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                      <Form.Item name={[name, 'colorName']} rules={[{ required: true }]} noStyle>
-                        <Input placeholder="Màu" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                      <Form.Item name={[name, 'stockQuantity']} rules={[{ required: true }]} noStyle>
-                        <Input type="number" placeholder="Tồn kho" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                      <Form.Item name={[name, 'price']} rules={[{ required: true }]} noStyle>
-                        <Input type="number" placeholder="Giá" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={6}>
-                      <Form.Item name={[name, 'seoDescription']} noStyle>
-                        <Input placeholder="SEO Description" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={2} style={{ textAlign: 'right' }}>
-                      <Popconfirm title="Xóa biến thể?" onConfirm={() => removeVariant(name)}>
-                        <Button danger size="small" icon={<DeleteOutlined />} />
-                      </Popconfirm>
-                    </Col>
-                  </Row>
+                {fields.map(({ key, name, ...rest }) => (
+                  <Card key={key} size="small" style={{ marginBottom: 16 }}>
+                    <Row gutter={16}>
+                      <Col span={4}>
+                        <Form.Item {...rest} name={[name, "size"]} label="Size">
+                          <Input placeholder="S, M, L..." />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item {...rest} name={[name, "colorName"]} label="Màu sắc">
+                          <Input placeholder="Đỏ, Xanh..." />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item {...rest} name={[name, "stockQuantity"]} label="Tồn kho">
+                          <InputNumber min={0} style={{ width: "100%" }} placeholder="0" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item {...rest} name={[name, "price"]} label="Giá bán">
+                          <InputNumber
+                            min={0}
+                            style={{ width: "100%" }}
+                            placeholder="Giá bán"
+                            formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item {...rest} name={[name, "brandNew"]} label="Hàng mới" initialValue={true}>
+                          <Select>
+                            <Select.Option value={true}>Có</Select.Option>
+                            <Select.Option value={false}>Không</Select.Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item label=" ">
+                          <Button danger onClick={() => remove(name)} block>
+                            Xóa
+                          </Button>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item {...rest} name={[name, "features"]} label="Tính năng">
+                          <Input placeholder="Tính năng đặc biệt..." />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item {...rest} name={[name, "seoDescription"]} label="Mô tả SEO">
+                          <Input placeholder="Mô tả cho SEO..." />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </Card>
                 ))}
-                <Button type="dashed" icon={<PlusCircleOutlined />} onClick={addVariant} block>
+                <Button
+                  type="dashed"
+                  onClick={() => add({
+                    size: '',
+                    colorCode: '#000000',
+                    colorName: '',
+                    stockQuantity: 0,
+                    price: 0,
+                    brandNew: true,
+                    features: '',
+                    seoDescription: ''
+                  })}
+                  block
+                  icon={<PlusOutlined />}
+                >
                   Thêm biến thể
                 </Button>
               </>
@@ -643,8 +721,6 @@ const ProductSeller: React.FC = () => {
           </Form.List>
         </Form>
       </Modal>
-
-
     </div>
   );
 };

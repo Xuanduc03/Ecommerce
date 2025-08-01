@@ -22,30 +22,48 @@ namespace EcommerceBe.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Order>> GetAllOrderAsync(string? search, int page, int pageSize)
+        public async Task<List<Order>> GetAllOrderAsync()
         {
-            var query = _context.Orders.Where(x => x.Status == "pending").AsQueryable();
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                query = query.Where(x => x.PaymentMethod.Contains(search));
-            }
-            return await query.Skip((page -1) * pageSize).Take(pageSize).ToListAsync();
+            var orders = await _context.Orders
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.product)
+            .Include(o => o.Shop)
+            .Include(o => o.ShippingAddress)
+                .ThenInclude(addr => addr.user)
+                .Where(x => x.Status == "pending")
+                .ToListAsync();
+
+            return orders;
         }
         public async Task<Order> GetOrderByIdAsync(Guid orderId)
         {
             return await _context.Orders
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.ProductVariant)
                 .FirstOrDefaultAsync(o => o.OrderId == orderId);
+        }
+        public async Task<List<Order>> GetOrdersByShopIdAsync(Guid shopId)
+        {
+            var orders = await _context.Orders
+             .Include(o => o.OrderItems)
+                 .ThenInclude(oi => oi.product)
+             .Include(o => o.Shop)
+             .Include(o => o.ShippingAddress)
+                 .ThenInclude(addr => addr.user)
+                 .Where(x => x.Status == "pending")
+                 .ToListAsync();
+
+            return orders;
         }
 
         public async Task<List<Order>> GetOrdersByUserIdAsync(Guid userId)
         {
             return await _context.Orders
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.ProductVariant)
-                .Where(o => o.UserId == userId)
-                .OrderByDescending(o => o.CreatedAt)
+                    .ThenInclude(oi => oi.product)
+                .Include(o => o.Shop)
+                .Include(o => o.ShippingAddress)
+                    .Where(o => o.UserId == userId)
+                    .OrderByDescending(o => o.CreatedAt)
                 .ToListAsync();
         }
 

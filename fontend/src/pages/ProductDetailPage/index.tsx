@@ -1,99 +1,135 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { Product } from '../../types/product';
 import ProductDetail from '../../components/Product/ProductDetail';
 import ProductShopInfo from '../../components/Product/ProductShopInfo';
 import ProductReview from '../../components/Product/ProductReview';
 import ProductDescription from '../../components/Product/ProductDetail/ProductDescription';
-import { toast } from 'react-toastify';
+import { ProductListSection } from '../../components/Product/ProductListSection';
+import type { ProductCardProps } from '../../components/Product/ProductCard';
 
 const API_URL = 'https://localhost:7040/api';
 
-const sampleProductVariant = {
-  productVariantId: "550e8400-e29b-41d4-a716-446655440000",
-  productId: "550e8400-e29b-41d4-a716-446655440001",
-  size: "L",
-  colorCode: "#2C3E50",
-  colorName: "Xanh Navy",
-  stockQuantity: 25,
-  viewsCount: 1247,
-  salesCount: 159,
-  brandNew: true,
-  features: JSON.stringify([
-    "Vải cotton 100% cao cấp",
-    "Độ bền cao, không co rút sau khi giặt",
-    "Thấm hút mồ hôi tốt",
-    "Đường may chắc chắn, tỉ mỉ",
-    "Cổ áo không bị giãn theo thời gian",
-    "Logo thương hiệu trên tay áo trái",
-    "Có thể giặt máy ở nhiệt độ 30°C",
-    "Phù hợp cho cả nam và nữ",
-    "Thiết kế đơn giản, dễ phối đồ",
-    "Chất liệu thoáng mát, phù hợp thời tiết Việt Nam"
-  ]),
-  price: 450000,
-  seoDescription: "Áo thun Champion T425 chất lượng cao với thiết kế cổ điển, chất liệu cotton 100% thoáng mát, phù hợp cho mọi hoạt động hàng ngày. Sản phẩm chính hãng với độ bền cao và form dáng chuẩn."
-};
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<any>(null);
   const [shop, setShop] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [suggestedProducts, setSuggestedProducts] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const token = localStorage.getItem('authToken');
   const navigate = useNavigate();
 
-useEffect(() => {
-  const fetchProductAndShop = async () => {
-    try {
-      const resProduct = await axios.get(`${API_URL}/product/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const productData = resProduct.data;
-      setProduct(productData);
-
-      if (productData?.shopId) {
-        const resShop = await axios.get(`${API_URL}/shop/${productData.shopId}`, {
+  useEffect(() => {
+    const fetchProductAndShop = async () => {
+      try {
+        const resProduct = await axios.get(`${API_URL}/product/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setShop(resShop.data);
+        const productData = resProduct.data;
+        setProduct(productData);
+
+        // Lấy đánh giá sản phẩm nếu có API riêng
+        if (productData?.productId) {
+          try {
+            const resReviews = await axios.get(`${API_URL}/review/product/${productData.productId}`);
+            setReviews(resReviews.data || []);
+          } catch {
+            setReviews([]);
+          }
+        } else {
+          setReviews([]);
+        }
+
+        if (productData?.shopId) {
+          const resShop = await axios.get(`${API_URL}/shop/${productData.shopId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setShop(resShop.data);
+
+          if (productData?.categoryId) {
+            const resSuggested = await axios.get(`${API_URL}/product/suggested-by-category/${productData.categoryId}?count=8`);
+            const data = resSuggested.data.data || resSuggested.data;
+            const transformedProducts: ProductCardProps[] = data.map((item: any) => ({
+              id: item.productId,
+              name: item.productName,
+              originalPrice: item.originalPrice,
+              currentPrice: item.variants?.[0]?.price ?? item.originalPrice,
+              discount: item.variants?.[0]
+                ? Math.round(((item.originalPrice - item.variants[0].price) / item.originalPrice) * 100)
+                : 0,
+              image: item.imageUrls?.[0] || '/images/default-product.jpg',
+              badge: item.variants?.[0]?.brandNew ? 'Mới' : '',
+              sold: item.variants?.[0]?.salesCount || 0,
+              rating: 4.5,
+              isFlashSale: false
+            }));
+            setSuggestedProducts(transformedProducts);
+          }
+
+        }
+      } catch (err) {
+        setError('Không tìm thấy sản phẩm');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError('Không tìm thấy sản phẩm');
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    fetchProductAndShop();
+
+    return () => {
+      setProduct(null);
+      setShop(null);
+      setReviews([]);
+      setSuggestedProducts([]);
+    };
+  }, [id, token]);
+
+
+  const handleSubmitReview = (review: any) => {
+    setReviews(prev => [
+      {
+        ...review,
+        id: Date.now(),
+        author: review.name,
+        rating: review.rating,
+        content: review.comment,
+        likes: 0,
+        timeAgo: "Vừa xong",
+        isVerified: false,
+        isRecommended: review.recommend,
+      },
+      ...prev,
+    ]);
   };
-
-  fetchProductAndShop();
-
-  return () => {
-    setProduct(null);
-    setShop(null);
-  };
-}, [id, token]);
-
 
   if (loading) return <div>Đang tải chi tiết sản phẩm...</div>;
   if (error || !product) return <div>{error || 'Không có dữ liệu'}</div>;
 
+  // Tính tổng điểm và số lượng đánh giá
+  const totalRating = reviews.length
+    ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
+    : 0;
+  const totalReviewCount = reviews.length;
 
   return (
     <div>
       <ProductDetail
+        productId={product.productId}
         productName={product.productName}
         price={product.variants?.[0]?.price ?? product.originalPrice ?? 0}
         originalPrice={product.originalPrice}
         imageUrls={product.imageUrls || []}
-        rating={4.5}
-        reviewCount={product.reviewCount || 0}
+        rating={Number(totalRating)}
+        reviewCount={totalReviewCount}
+        shopId={product?.shopId}
         salesCount={product.variants?.[0]?.salesCount || 0}
         voucher={product.voucher || 'Giảm 10% cho đơn đầu'}
         shippingText="Miễn phí vận chuyển"
         assuranceText="Đổi trả 30 ngày"
         stock={product.variants?.[0]?.stockQuantity ?? 0}
-        variants={product.variants || []}  // giữ nguyên interface Variant
+        variants={product.variants || []}
         onAddToCart={() => console.log('Thêm giỏ hàng', product.productId)}
         onBuyNow={() => navigate(`/checkout?product=${product.productId}`)}
       />
@@ -101,30 +137,42 @@ useEffect(() => {
       <ProductShopInfo shop={shop} />
 
       <ProductDescription
-        variant={sampleProductVariant}
-        itemNumber="253531066697"
-        lastUpdated="11 Jul, 2025 23:18:41 PDT"
-        sellerName="Shop Thời Trang ABC"
-        brand="Champion"
-        model="T425"
-        department="Nam"
-        category={["Quần áo, Giày dép & Phụ kiện", "Quần áo Nam", "Áo phông", "Áo thun"]}
-        material="100% Cotton hoặc Cotton Blend (Chi tiết trong mô tả)"
-        fit="Regular"
-        style="Áo thun cơ bản"
-        pattern="Trơn"
-        neckline="Cổ tròn"
-        vintage={false}
-        modifiedItem={false}
-        additionalFeatures={[
-          "Có thể giặt máy",
-          "Không sử dụng chất tẩy",
-          "Phơi khô tự nhiên",
-          "Là ở nhiệt độ thấp"
-        ]}
+        variant={product.variants?.[0]}
+        itemNumber={product.sku || "Mã-SP-Mặc-Định"}
+        lastUpdated={product.lastUpdated || "N/A"}
+        sellerName={shop?.shopName || "Shop Không Rõ Tên"}
+        brand={product.brand || "Không rõ"}
+        model={product.model || "Không rõ"}
+        department={product.department || "Unisex"}
+        category={product.categoryName || ["Chưa phân loại"]}
+        material={product.material || "Không xác định"}
+        fit={product.fit || "Vừa vặn"}
+        style={product.style || "Cơ bản"}
+        pattern={product.pattern || "Đơn sắc"}
+        vintage={product.vintage ?? false}
+        modifiedItem={product.modifiedItem ?? false}
+        additionalFeatures={product.additionalFeatures || []}
+        type={''}
       />
-      <ProductReview />
 
+      <ProductReview
+        productId={product.productId}
+        productName={product.productName}
+        productImage={product.imageUrls?.[0] || ""}
+        reviews={reviews}
+        totalRating={Number(totalRating)}
+        totalReviewCount={totalReviewCount}
+        totalSatisfied={product.totalSatisfied || "Chưa có dữ liệu"}
+        onSubmitReview={handleSubmitReview}
+      />
+
+      {/* đề xuất sản phẩm theo danh mục */}
+      <ProductListSection
+        title="Sản phẩm liên quan"
+        products={suggestedProducts}
+        showPagination={true}
+        itemsPerPage={8}
+      />
     </div>
-  )
-}
+  );
+};

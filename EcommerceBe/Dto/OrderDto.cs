@@ -2,16 +2,16 @@
 {
     public class OrderCreateDto
     {
-        public Guid ShopId { get; set; }
         public Guid ShippingAddressId { get; set; }
         public string PaymentMethod { get; set; }
         public List<Guid>? DiscountIds { get; set; }
-        public List<OrderItemCreateDto> Items { get; set; }
+        public List<OrderItemCreateDto> cartItems { get; set; }
     }
 
     public class OrderItemCreateDto
     {
-        public Guid ProductVariantId { get; set; }
+        public Guid ShopId { get; set; }
+        public Guid ProductId { get; set; }
         public int Quantity { get; set; }
     }
     public class OrderDto
@@ -24,6 +24,27 @@
         public decimal TotalAmount { get; set; }
 
         public List<OrderItemDto> Items { get; set; }
+    }
+
+
+    public class ReponseOrderAllDto
+    {
+        public Guid OrderId { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string ShippingAddress { get; set; }
+        public string PaymentMethod { get; set; }
+        public string Status { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string UserName { get; set; }
+        public List<ReponseOrderItemDto> Items { get; set; } = new();
+    }
+
+    public class ReponseOrderItemDto
+    {
+        public Guid ProductId { get; set; }
+        public string ProductName { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
     }
 
     public class OrderItemDto

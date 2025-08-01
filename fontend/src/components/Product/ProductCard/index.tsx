@@ -3,6 +3,9 @@ import './ProductCard.scss';
 import { useNavigate } from 'react-router-dom';
 
 export interface ProductCardProps {
+  inStock: boolean;
+  brand: any;
+  category: string | null;
   id: number;
   name: string;
   originalPrice: number;

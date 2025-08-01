@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  ChevronDown, 
-  Filter, 
-  Grid, 
-  List, 
-  ChevronLeft, 
+import {
+  ChevronDown,
+  Filter,
+  Grid,
+  List,
+  ChevronLeft,
   ChevronRight,
   Search,
   Star,
@@ -20,24 +20,10 @@ import {
   ChevronUp
 } from 'lucide-react';
 import './CategoryProduct.scss';
-
-// Types
-interface Product {
-  id: number;
-  name: string;
-  originalPrice: number;
-  currentPrice: number;
-  discount: number;
-  image: string;
-  badge: string;
-  sold: number;
-  rating: number;
-  isFlashSale: boolean;
-  category: string;
-  location: string;
-  brand: string;
-  inStock: boolean;
-}
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
+import { ProductCard, type ProductCardProps } from '../../Product/ProductCard';
+import { ProductListSection } from '../../Product/ProductListSection';
 
 interface FilterState {
   priceRange: [number, number];
@@ -48,148 +34,12 @@ interface FilterState {
   hasDiscount: boolean;
 }
 
-// Mock data
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    name: 'Loa bluetooth không dây mini A005 đèn led RGB cao cấp',
-    originalPrice: 43000,
-    currentPrice: 27000,
-    discount: 49,
-    image: '/api/placeholder/300/300',
-    badge: 'Yêu thích',
-    sold: 127,
-    rating: 4.5,
-    isFlashSale: false,
-    category: 'Loa',
-    location: 'Hà Nội',
-    brand: 'TechSound',
-    inStock: true
-  },
-  {
-    id: 2,
-    name: 'CLUBLU- Jack Chuyển Đổi Type-C Sang 3.5mm chất lượng cao',
-    originalPrice: 10000,
-    currentPrice: 7400,
-    discount: 26,
-    image: '/api/placeholder/300/300',
-    badge: 'Bán chạy',
-    sold: 274,
-    rating: 4.7,
-    isFlashSale: false,
-    category: 'Phụ kiện',
-    location: 'TP. Hồ Chí Minh',
-    brand: 'CLUBLU',
-    inStock: true
-  },
-  {
-    id: 3,
-    name: 'Loa toàn dải J Go 2 Go 3 Go 4 5 inch 17inch 3W chuyên nghiệp',
-    originalPrice: 28000,
-    currentPrice: 22400,
-    discount: 20,
-    image: '/api/placeholder/300/300',
-    badge: '',
-    sold: 89,
-    rating: 4.3,
-    isFlashSale: false,
-    category: 'Loa',
-    location: 'Đà Nẵng',
-    brand: 'JBL',
-    inStock: true
-  },
-  {
-    id: 4,
-    name: 'Loa Di Động Bluetooth JBL Go 4 7 inch tối ưu âm thanh',
-    originalPrice: 1170000,
-    currentPrice: 936000,
-    discount: 20,
-    image: '/api/placeholder/300/300',
-    badge: 'Hot',
-    sold: 156,
-    rating: 4.8,
-    isFlashSale: true,
-    category: 'Loa',
-    location: 'Hà Nội',
-    brand: 'JBL',
-    inStock: true
-  },
-  {
-    id: 5,
-    name: 'Tai nghe bluetooth không dây mini A005 pin 8h',
-    originalPrice: 95000,
-    currentPrice: 71000,
-    discount: 25,
-    image: '/api/placeholder/300/300',
-    badge: 'Mới',
-    sold: 203,
-    rating: 4.6,
-    isFlashSale: false,
-    category: 'Tai nghe',
-    location: 'TP. Hồ Chí Minh',
-    brand: 'SoundMax',
-    inStock: false
-  },
-  {
-    id: 6,
-    name: 'Loa bluetooth mini công suất 5W chống nước IPX7',
-    originalPrice: 45000,
-    currentPrice: 36000,
-    discount: 20,
-    image: '/api/placeholder/300/300',
-    badge: '',
-    sold: 67,
-    rating: 4.4,
-    isFlashSale: false,
-    category: 'Loa',
-    location: 'Hà Nội',
-    brand: 'Anker',
-    inStock: true
-  },
-  {
-    id: 7,
-    name: 'Máy chơi game cầm tay Nintendo Switch OLED',
-    originalPrice: 8900000,
-    currentPrice: 7800000,
-    discount: 12,
-    image: '/api/placeholder/300/300',
-    badge: 'Premium',
-    sold: 45,
-    rating: 4.9,
-    isFlashSale: true,
-    category: 'Console',
-    location: 'TP. Hồ Chí Minh',
-    brand: 'Nintendo',
-    inStock: true
-  },
-  {
-    id: 8,
-    name: 'Tivi Samsung 4K 55 inch Smart TV 2024',
-    originalPrice: 15000000,
-    currentPrice: 12500000,
-    discount: 17,
-    image: '/api/placeholder/300/300',
-    badge: 'Cao cấp',
-    sold: 23,
-    rating: 4.7,
-    isFlashSale: false,
-    category: 'Tivi',
-    location: 'Hà Nội',
-    brand: 'Samsung',
-    inStock: true
-  }
-];
-
-const categories = [
-  { name: 'Tất cả', count: 234, icon: Grid },
-  { name: 'Loa', count: 89, icon: null },
-  { name: 'Tai nghe', count: 156, icon: null },
-  { name: 'Tivi', count: 45, icon: null },
-  { name: 'Console', count: 23, icon: null },
-  { name: 'Phụ kiện', count: 67, icon: null },
-  { name: 'Tivi Box', count: 34, icon: null },
-  { name: 'Thiết bị âm thanh', count: 78, icon: null }
-];
+interface Category {
+  categoryId: string;
+  name: string;
+  productCount: number;
+  subCategories?: Category[];
+}
 
 const sortOptions = [
   { value: 'popular', label: 'Phổ Biến', icon: TrendingUp },
@@ -200,15 +50,104 @@ const sortOptions = [
   { value: 'rating', label: 'Đánh giá cao', icon: Star }
 ];
 
+const API_URL = 'https://localhost:7040/api';
+
 const CategoryProduct: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('Tất cả');
   const [sortBy, setSortBy] = useState<string>('popular');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [products, setProducts] = useState<ProductCardProps[]>([]);
+  const [categories, setCategories] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
   
+  const { slug } = useParams<{ slug: string }>();
+
+  // Safe token retrieval
+  const getAuthToken = () => {
+    try {
+      return localStorage.getItem('authToken');
+    } catch (error) {
+      console.warn('localStorage not available:', error);
+      return null;
+    }
+  };
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setError('');
+        const token = getAuthToken();
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        const response = await axios.get(`${API_URL}/categories/slug/${slug}`, {
+          headers
+        });
+
+        const data = response.data.data || response.data;
+        setCategories(data);
+
+        // Auto-select first subcategory and fetch its products
+        if (data?.subCategories?.length > 0) {
+          const firstCategory = data.subCategories[0];
+          setSelectedCategory(firstCategory.categoryId);
+          await fetchProducts(firstCategory.categoryId);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories', error);
+        setError('Không thể tải danh mục sản phẩm');
+      }
+    };
+
+    if (slug) {
+      fetchCategories();
+    }
+  }, [slug]);
+
+  const fetchProducts = async (categoryId: string) => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const token = getAuthToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`${API_URL}/product/by-category/${categoryId}`, {
+        headers
+      });
+
+      const data = response.data.data || response.data;
+
+      const transformedProducts: ProductCardProps[] = data.map((item: any) => ({
+        id: item.productId,
+        name: item.productName,
+        originalPrice: item.originalPrice,
+        currentPrice: item.finalPrice || item.originalPrice,
+        discount: item.discountPercent || 0,
+        image: item.imageUrls?.[0] || '/images/default-product.jpg',
+        badge: item.variants?.[0]?.brandNew ? 'Mới' : '',
+        sold: 0, // API doesn't provide sales count
+        rating: 4.5,
+        isFlashSale: false,
+        brand: item.subcategoryName || 'Unknown', // Use subcategoryName as brand
+        category: item.categoryName || '', 
+        inStock: (item.variants?.some((variant: any) => variant.stockQuantity > 0)) ?? true
+      }));
+      
+      setProducts(transformedProducts);
+    } catch (error) {
+      console.error('Failed to fetch products', error);
+      setError('Không thể tải sản phẩm');
+      setProducts([]); // Set empty array on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const [filters, setFilters] = useState<FilterState>({
     priceRange: [0, 20000000],
     locations: [],
@@ -220,43 +159,43 @@ const CategoryProduct: React.FC = () => {
 
   const itemsPerPage = 12;
 
-  // Get unique values for filters
-  const filterOptions = useMemo(() => ({
-    locations: [...new Set(mockProducts.map(p => p.location))],
-    brands: [...new Set(mockProducts.map(p => p.brand))],
-    priceRange: {
-      min: Math.min(...mockProducts.map(p => p.currentPrice)),
-      max: Math.max(...mockProducts.map(p => p.currentPrice))
+  const filterOptions = useMemo(() => {
+    if (products.length === 0) {
+      return {
+        priceRange: { min: 0, max: 20000000 },
+        brands: []
+      };
     }
-  }), []);
+    
+    return {
+      priceRange: {
+        min: Math.min(...products.map(p => p.currentPrice)),
+        max: Math.max(...products.map(p => p.currentPrice))
+      },
+      brands: [...new Set(products.map(p => p.brand).filter(Boolean))]
+    };
+  }, [products]);
 
-  // Filter and sort products
   const filteredProducts = useMemo(() => {
-    let result = mockProducts;
-
-    // Category filter
-    if (selectedCategory !== 'Tất cả') {
-      result = result.filter(p => p.category === selectedCategory);
-    }
+    let result = products;
 
     // Search filter
     if (searchQuery) {
-      result = result.filter(p => 
+      result = result.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.brand.toLowerCase().includes(searchQuery.toLowerCase())
+        (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
     // Apply filters
     result = result.filter(p => {
       const matchesPrice = p.currentPrice >= filters.priceRange[0] && p.currentPrice <= filters.priceRange[1];
-      const matchesLocation = filters.locations.length === 0 || filters.locations.includes(p.location);
-      const matchesBrand = filters.brands.length === 0 || filters.brands.includes(p.brand);
+      const matchesBrand = filters.brands.length === 0 || (p.brand && filters.brands.includes(p.brand));
       const matchesRating = p.rating >= filters.rating;
       const matchesStock = !filters.inStock || p.inStock;
       const matchesDiscount = !filters.hasDiscount || p.discount > 0;
 
-      return matchesPrice && matchesLocation && matchesBrand && matchesRating && matchesStock && matchesDiscount;
+      return matchesPrice && matchesBrand && matchesRating && matchesStock && matchesDiscount;
     });
 
     // Sort products
@@ -281,7 +220,7 @@ const CategoryProduct: React.FC = () => {
     }
 
     return result;
-  }, [selectedCategory, searchQuery, filters, sortBy]);
+  }, [products, searchQuery, filters, sortBy]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -298,90 +237,63 @@ const CategoryProduct: React.FC = () => {
     }).format(price);
   };
 
-  // Clear filters
+  // Clear filters - Updated
   const clearFilters = () => {
-    setFilters({
-      priceRange: [filterOptions.priceRange.min, filterOptions.priceRange.max],
+    const defaultFilters = {
+      priceRange: [0, 50000000] as [number, number], // Set a reasonable default max
       locations: [],
       brands: [],
       rating: 0,
       inStock: false,
       hasDiscount: false
-    });
+    };
+    
+    setFilters(defaultFilters);
   };
 
-  // Product Card Component
-  const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
-    <div className={`product-card ${viewMode === 'list' ? 'list-view' : ''}`}>
-      <div className="product-image">
-        <img src={product.image} alt={product.name} />
-        {product.isFlashSale && (
-          <div className="flash-sale-badge">
-            <Zap size={12} />
-            Flash Sale
-          </div>
-        )}
-        {product.badge && (
-          <div className={`product-badge ${product.badge.toLowerCase()}`}>
-            {product.badge}
-          </div>
-        )}
-        {product.discount > 0 && (
-          <div className="discount-badge">
-            -{product.discount}%
-          </div>
-        )}
-        <div className="product-actions">
-          <button className="action-btn">
-            <Heart size={16} />
-          </button>
-          <button className="action-btn">
-            <Eye size={16} />
-          </button>
-        </div>
-      </div>
-      
-      <div className="product-info">
-        <h3 className="product-name">{product.name}</h3>
+  // Initialize filters when products change
+  useEffect(() => {
+    if (products.length > 0 && filterOptions.priceRange.max > 0) {
+      setFilters(prev => ({
+        ...prev,
+        priceRange: [filterOptions.priceRange.min, filterOptions.priceRange.max]
+      }));
+    }
+  }, [filterOptions]);
+
+  // Debug information - Enhanced
+  useEffect(() => {
+
+    // Debug individual product filtering
+    if (products.length > 0) {
+      console.log('=== FILTER DEBUG ===');
+      products.forEach((product, index) => {
+        const matchesPrice = product.currentPrice >= filters.priceRange[0] && product.currentPrice <= filters.priceRange[1];
+        const matchesBrand = filters.brands.length === 0 || (product.brand && filters.brands.includes(product.brand));
+        const matchesRating = product.rating >= filters.rating;
+        const matchesStock = !filters.inStock || product.inStock;
+        const matchesDiscount = !filters.hasDiscount || product.discount > 0;
         
-        <div className="product-rating">
-          <div className="stars">
-            {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                size={12} 
-                className={i < Math.floor(product.rating) ? 'filled' : ''}
-              />
-            ))}
-            <span className="rating-text">({product.rating})</span>
-          </div>
-          <span className="sold-count">Đã bán {product.sold}</span>
-        </div>
-
-        <div className="product-price">
-          <span className="current-price">{formatPrice(product.currentPrice)}</span>
-          {product.originalPrice > product.currentPrice && (
-            <span className="original-price">{formatPrice(product.originalPrice)}</span>
-          )}
-        </div>
-
-        <div className="product-meta">
-          <div className="location">
-            <MapPin size={12} />
-            <span>{product.location}</span>
-          </div>
-          <div className="brand">
-            <span>{product.brand}</span>
-          </div>
-        </div>
-
-        <button className="add-to-cart-btn">
-          <ShoppingCart size={16} />
-          Thêm vào giỏ
-        </button>
-      </div>
-    </div>
-  );
+        console.log(`Product ${index}:`, {
+          name: product.name,
+          currentPrice: product.currentPrice,
+          brand: product.brand,
+          rating: product.rating,
+          inStock: product.inStock,
+          discount: product.discount,
+          filters: {
+            priceRange: filters.priceRange,
+            matchesPrice,
+            matchesBrand,
+            matchesRating,
+            matchesStock,
+            matchesDiscount
+          },
+          passesFilter: matchesPrice && matchesBrand && matchesRating && matchesStock && matchesDiscount
+        });
+      });
+    }
+  }, [categories, selectedCategory, products, filteredProducts, paginatedProducts, isLoading, error, searchQuery, filters, filterOptions]);
 
   return (
     <div className="category-product-page">
@@ -399,9 +311,9 @@ const CategoryProduct: React.FC = () => {
               />
             </div>
           </div>
-          
+
           <div className="header-controls">
-            <button 
+            <button
               className={`filter-toggle ${showFilters ? 'active' : ''}`}
               onClick={() => setShowFilters(!showFilters)}
             >
@@ -413,15 +325,15 @@ const CategoryProduct: React.FC = () => {
                 </span>
               )}
             </button>
-            
+
             <div className="view-controls">
-              <button 
+              <button
                 className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
                 onClick={() => setViewMode('grid')}
               >
                 <Grid size={16} />
               </button>
-              <button 
+              <button
                 className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
                 onClick={() => setViewMode('list')}
               >
@@ -440,17 +352,18 @@ const CategoryProduct: React.FC = () => {
                 <h3>Danh mục sản phẩm</h3>
               </div>
               <div className="category-list">
-                {categories.map((category) => (
+                {categories?.subCategories?.map((sub: any) => (
                   <button
-                    key={category.name}
-                    className={`category-item ${selectedCategory === category.name ? 'active' : ''}`}
+                    key={sub.categoryId}
+                    className={`category-item ${selectedCategory === sub.categoryId ? 'active' : ''}`}
                     onClick={() => {
-                      setSelectedCategory(category.name);
+                      setSelectedCategory(sub.categoryId);
                       setCurrentPage(1);
+                      fetchProducts(sub.categoryId);
                     }}
                   >
-                    <span className="category-name">{category.name}</span>
-                    <span className="category-count">({category.count})</span>
+                    <span className="category-name">{sub.name}</span>
+                    <span className="category-count">({sub.productCount})</span>
                   </button>
                 ))}
               </div>
@@ -497,59 +410,28 @@ const CategoryProduct: React.FC = () => {
                 </div>
               </div>
 
-              {/* Location */}
-              <div className="filter-group">
-                <h4>Nơi bán</h4>
-                {filterOptions.locations.map(location => (
-                  <label key={location} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={filters.locations.includes(location)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFilters(prev => ({
-                            ...prev,
-                            locations: [...prev.locations, location]
-                          }));
-                        } else {
-                          setFilters(prev => ({
-                            ...prev,
-                            locations: prev.locations.filter(l => l !== location)
-                          }));
-                        }
-                      }}
-                    />
-                    <span>{location}</span>
-                  </label>
-                ))}
-              </div>
-
-              {/* Brand */}
-              <div className="filter-group">
-                <h4>Thương hiệu</h4>
-                {filterOptions.brands.map(brand => (
-                  <label key={brand} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={filters.brands.includes(brand)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFilters(prev => ({
-                            ...prev,
-                            brands: [...prev.brands, brand]
-                          }));
-                        } else {
-                          setFilters(prev => ({
-                            ...prev,
-                            brands: prev.brands.filter(b => b !== brand)
-                          }));
-                        }
-                      }}
-                    />
-                    <span>{brand}</span>
-                  </label>
-                ))}
-              </div>
+              {/* Brand Filter */}
+              {filterOptions.brands.length > 0 && (
+                <div className="filter-group">
+                  <h4>Thương hiệu</h4>
+                  {filterOptions.brands.map(brand => (
+                    <label key={brand} className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={filters.brands.includes(brand)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFilters(prev => ({ ...prev, brands: [...prev.brands, brand] }));
+                          } else {
+                            setFilters(prev => ({ ...prev, brands: prev.brands.filter(b => b !== brand) }));
+                          }
+                        }}
+                      />
+                      <span>{brand}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
 
               {/* Rating */}
               <div className="filter-group">
@@ -596,11 +478,25 @@ const CategoryProduct: React.FC = () => {
 
           {/* Main Content */}
           <div className="main-content">
+            {/* Error Message */}
+            {error && (
+              <div className="error-message">
+                <p>{error}</p>
+                <button onClick={() => {
+                  if (selectedCategory) {
+                    fetchProducts(selectedCategory);
+                  }
+                }}>
+                  Thử lại
+                </button>
+              </div>
+            )}
+
             {/* Content Header */}
             <div className="content-header">
               <div className="results-info">
                 <h2>
-                  {selectedCategory === 'Tất cả' ? 'Tất cả sản phẩm' : selectedCategory}
+                  {categories?.name || 'Sản phẩm'}
                   <span className="count">({filteredProducts.length} sản phẩm)</span>
                 </h2>
               </div>
@@ -630,20 +526,30 @@ const CategoryProduct: React.FC = () => {
                   <p>Đang tải sản phẩm...</p>
                 </div>
               ) : paginatedProducts.length > 0 ? (
-                paginatedProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))
-              ) : (
+                <>
+
+                  {/* Temporary simple product display for testing */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                    {paginatedProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                  
+                </>
+              ) : !error ? (
                 <div className="empty-state">
                   <Search size={48} />
                   <h3>Không tìm thấy sản phẩm</h3>
                   <p>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+                  <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+                    Debug: {products.length} products loaded, {filteredProducts.length} after filters
+                  </div>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {totalPages > 1 && !isLoading && (
               <div className="pagination">
                 <button
                   className="pagination-btn"
@@ -653,7 +559,7 @@ const CategoryProduct: React.FC = () => {
                   <ChevronLeft size={16} />
                   Trước
                 </button>
-                
+
                 <div className="pagination-numbers">
                   {[...Array(totalPages)].map((_, i) => (
                     <button

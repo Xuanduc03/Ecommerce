@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import './ProductDetail.scss';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../../../redux/cartSlice';
+import type { AppDispatch } from '../../../redux/store';
+import { toast } from 'react-toastify';
 
 interface Variant {
   variantId: string;
@@ -11,7 +15,9 @@ interface Variant {
 }
 
 interface ProductDetailProps {
+  productId?: string;
   productName: string;
+  shopId?: string;
   originalPrice?: number;
   imageUrls: string[];
   variants?: Variant[];
@@ -23,12 +29,15 @@ interface ProductDetailProps {
   shippingText?: string;
   assuranceText?: string;
   rating?: number;
-  onAddToCart: () => void;
+  category?: string;
+  onAddToCart?: (item: any) => void; // Optional custom handler
   onBuyNow: () => void;
 }
 
 const ProductDetail: React.FC<ProductDetailProps> = ({
+  productId,
   productName,
+  shopId,
   price,
   originalPrice,
   imageUrls,
@@ -46,6 +55,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariants, setSelectedVariants] = useState<{ color?: string; size?: string }>({});
+  const dispatch = useDispatch<AppDispatch>();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -53,13 +63,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
       currency: 'VND',
       minimumFractionDigits: 0,
     }).format(price);
-  };
-
-  const formatVND = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price * 25000);
   };
 
   const handleVariantChange = (variantId: string, value: string) => {
@@ -127,10 +130,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             <div className="seller-avatar"><span>A</span></div>
             <div className="seller-details">
               <div className="seller-name">Antonline</div>
-              <div className="seller-stats">
-                <span className="rating">99% positive</span>
-                <span className="reviews">({reviewCount.toLocaleString()} reviews)</span>
-              </div>
             </div>
           </div>
         </div>
@@ -228,7 +227,40 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
         <div className="info__actions">
           <button className="action-btn buy-now" onClick={onBuyNow}>Mua ngay nào!</button>
-          <button className="action-btn add-to-cart" onClick={onAddToCart}>Thêm vào giỏ hàng</button>
+          <button
+            className="action-btn add-to-cart"
+            onClick={() => {
+              const selectedVariant = variants?.find(v =>
+                v.colorName === selectedVariants.color &&
+                v.size === selectedVariants.size
+              );
+
+              if (!selectedVariant) {
+                toast.error("Vui lòng chọn màu và dung lượng!");
+                return;
+              }
+
+              if (!productId) {
+                toast.error("Thiếu ID sản phẩm!");
+                return;
+              }
+
+              dispatch(addToCart({
+                productId: productId,
+                productName,
+                size: selectedVariant.size,
+                shopId: shopId,
+                color: selectedVariant.colorName,
+                category: 'Default',
+                price: selectedVariant.price,
+                quantity,
+                images: [selectedVariant.imageUrl || imageUrls[0]]
+              }));
+            }}
+          >
+            Thêm vào giỏ hàng
+          </button>
+
           <button className="action-btn watchlist">♡ Yêu thích</button>
         </div>
 

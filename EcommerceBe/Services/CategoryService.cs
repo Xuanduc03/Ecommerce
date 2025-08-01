@@ -55,6 +55,43 @@ namespace EcommerceBe.Services
             };
         }
 
+        public async Task<CategoryDto?> GetBySlug(string slug)
+        {
+            var category = await _repo.GetSlugAsync(slug);
+            if (category == null)
+                throw new Exception("Không tìm thấy danh mục");
+
+            var dto = new CategoryDto
+            {
+                CategoryId = category.CategoryId,
+                Name = category.Name,
+                Description = category.Description,
+                ParentCategoryId = category.ParentCategoryId,
+                ParentCategoryName = category.ParentCategory?.Name,
+                Slug = category.Slug,
+                MetaTitle = category.MetaTitle,
+                MetaDescription = category.MetaDescription,
+                ImageUrl = category.ImageUrl,
+                ThumbnailUrl = category.ThumbnailUrl,
+                ProductCount = category.Products?.Count ?? 0,
+
+                // ✅ Map SubCategories nếu có
+                SubCategories = category.SubCategories?
+                    .Select(sub => new CategoryDto
+                    {
+                        CategoryId = sub.CategoryId,
+                        Name = sub.Name,
+                        Slug = sub.Slug,
+                        ImageUrl = sub.ImageUrl,
+                        ParentCategoryId = sub.ParentCategoryId,
+                        ProductCount = sub.Products?.Count ?? 0
+                    }).ToList()
+            };
+
+            return dto;
+        }
+
+
         public async Task<bool> CreateAsync(CreateCategoryDto dto)
         {
             try

@@ -42,7 +42,7 @@ interface Order {
 }
 
 // API base URL (thay theo backend của bạn)
-const API_URL = "https://localhost:7040/api/orders";
+const API_URL = "https://localhost:7040/api/order";
 
 const OrderManager: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);

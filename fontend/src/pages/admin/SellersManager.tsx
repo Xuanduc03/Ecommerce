@@ -211,10 +211,10 @@ const SellerManagement: React.FC = () => {
               onChange={(value) => setFilterStatus(value)}
               allowClear
             >
-              <Select.Option value="all">Tất cả</Select.Option>
-              <Select.Option value="Pending">Chờ duyệt</Select.Option>
-              <Select.Option value="Approved">Đã duyệt</Select.Option>
-              <Select.Option value="Rejected">Từ chối</Select.Option>
+              <Select.Option value="Tất cả">Tất cả</Select.Option>
+              <Select.Option value="Chờ duyệt">Chờ duyệt</Select.Option>
+              <Select.Option value="Đã duyệt">Đã duyệt</Select.Option>
+              <Select.Option value="Từ chối">Từ chối</Select.Option>
             </Select>
           </Col>
           <Col span={8} style={{ textAlign: 'right' }}>

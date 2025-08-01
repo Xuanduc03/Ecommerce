@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import './ProductShopInfo.scss';
 import { FaRocketchat, FaShopware, FaCalendarAlt, FaPhone, FaImage } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 interface ShopInfo {
+  shopId?: string;
   name?: string;
   description?: string;
   logoUrl?: string;
@@ -19,6 +21,7 @@ const ProductShopInfo: React.FC<ProductShopInfoProps> = ({ shop }) => {
   useEffect(() => {
     console.log('Shop data:', shop);
   }, [shop]);
+  const navigate = useNavigate();
 
   if (!shop) {
     return (
@@ -74,21 +77,8 @@ const ProductShopInfo: React.FC<ProductShopInfoProps> = ({ shop }) => {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="shop-actions">
-          <button className="btn btn-chat">
-            <FaRocketchat className="btn-icon" />
-            <span>Chat Ngay</span>
-          </button>
-          <button className="btn btn-shop">
-            <FaShopware className="btn-icon" />
-            <span>Xem Shop</span>
-          </button>
-        </div>
-
-        {/* Shop Banner */}
+           {/* Shop Banner */}
         {shop.bannerUrl && (
           <div className="shop-banner">
             <div className="banner-container">
@@ -102,23 +92,27 @@ const ProductShopInfo: React.FC<ProductShopInfoProps> = ({ shop }) => {
                 <FaImage className="banner-icon" />
               </div>
             </div>
-            
-            {/* Banner URL Display */}
-            <div className="banner-info">
-              <span className="banner-label">Banner URL:</span>
-              <div className="banner-url">
-                <code>{shop.bannerUrl}</code>
-                <button 
-                  className="copy-btn"
-                  onClick={() => navigator.clipboard.writeText(shop.bannerUrl || '')}
-                  title="Copy URL"
-                >
-                  📋
-                </button>
-              </div>
-            </div>
+          
           </div>
         )}
+        </div>
+
+       
+
+        {/* Action Buttons */}
+        <div className="shop-actions">
+          <button className="btn btn-chat">
+            <FaRocketchat className="btn-icon" />
+            <span>Chat Ngay</span>
+          </button>
+          <button className="btn btn-shop"
+          onClick={() => navigate(`/shop/${shop.shopId}`)}>
+            <FaShopware className="btn-icon" />
+            <span>Xem Shop</span>
+          </button>
+        </div>
+
+        
       </div>
     </div>
   );

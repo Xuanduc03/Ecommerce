@@ -2,6 +2,7 @@
 using EcommerceBe.Dto;
 using EcommerceBe.Services.Interfaces;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EcommerceBe.Controllers
 {
@@ -97,28 +98,30 @@ namespace EcommerceBe.Controllers
         }
 
 
-        [HttpGet("profile")]
-        public async Task<IActionResult> GetProfile()
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
         {
-            var userId = GetUserIdFromToken();
-            var profile = await _authService.GetProfileAsync(userId);
-            return Ok(profile);
-        }
+            try
+            {
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        [HttpPut("profile")]
-        public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileDto model)
-        {
-            var userId = GetUserIdFromToken();
-            var result = await _authService.UpdateProfileAsync(userId, model);
-            return Ok(new { success = result });
-        }
+                await _authService.ChangePasswordAsync(userId, model);
 
-        private Guid GetUserIdFromToken()
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return Guid.TryParse(userIdClaim, out var userId)
-                ? userId
-                : throw new UnauthorizedAccessException("Invalid token");
+                return Ok( new 
+                {
+                    Success = true,
+                    Message = "Đổi mật khẩu thành công"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = "Lỗi hệ thống khi đổi mật khẩu"
+                });
+            }
         }
     }
 }

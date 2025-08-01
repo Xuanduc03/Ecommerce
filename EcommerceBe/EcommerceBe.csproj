@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
+	  <InvariantGlobalization>false</InvariantGlobalization>
+	  <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <InvariantGlobalization>true</InvariantGlobalization>
     <UserSecretsId>b4a3063f-7f6c-4935-a6b8-451a57c50b64</UserSecretsId>
   </PropertyGroup>
 

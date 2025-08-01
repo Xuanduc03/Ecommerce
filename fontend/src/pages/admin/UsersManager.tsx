@@ -343,6 +343,7 @@ const UsersManager: React.FC = () => {
         />
       </Card>
 
+      {/* modal add & update */}
       <Modal
         title={currentUser ? 'Sửa thông tin người dùng' : 'Thêm người dùng mới'}
         open={isModalVisible}
@@ -414,6 +415,17 @@ const UsersManager: React.FC = () => {
                     { value: 'false', label: 'Không' },
                   ]}
                 />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item
+                name="password"
+                label="Mật khẩu"
+                rules={[{ required: !currentUser, message: 'Vui lòng nhập mật khẩu' }]}
+              >
+                <Input.Password placeholder="Nhập mật khẩu" />
               </Form.Item>
             </Col>
           </Row>

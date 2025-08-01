@@ -1,89 +1,89 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './ShopHeader.scss';
 
-interface ShopHeaderProps {
-  storeInfo: {
-    name: string;
-    logoUrl?: string;
-    bannerUrl?: string;
-    onlineTrucks?: number;
-    chiefName?: string;
-    followerCount?: number;
-    productCount?: number;
-  };
-  onTabChange: (tab: string) => void;
+interface ShopInfo {
+  shopId: string;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  rating?: number;
+  totalReviews?: number;
+  totalProducts?: number;
+  followers?: number;
+  joinDate?: string;
 }
 
-const ShopHeader: React.FC<ShopHeaderProps> = ({
-  storeInfo = {
-    name: "SAMSUNG OFFICIAL STORE",
-    onlineTrucks: 10,
-    chiefName: "Chief",
-    followerCount: 0,
-    productCount: 0
-  },
-  onTabChange
-}) => {
-  const [activeTab, setActiveTab] = useState('products');
+interface ShopHeaderProps {
+  shopInfo: ShopInfo;
+}
 
-  const handleTabClick = (tab: string) => {
-    setActiveTab(tab);
-    onTabChange(tab);
+const ShopHeader: React.FC<ShopHeaderProps> = ({ shopInfo }) => {
+  const formatNumber = (num: number): string => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
   };
 
   return (
-    <header className="samsung-header">
-      {/* Banner Image from API */}
-      {storeInfo.bannerUrl && (
-        <div className="banner-container">
-          <img src={storeInfo.bannerUrl} alt={`${storeInfo.name} banner`} />
-        </div>
-      )}
-      
-      {/* Logo and Store Name */}
-      <div className="store-identity">
-        {storeInfo.logoUrl && (
-          <img src={storeInfo.logoUrl} alt={`${storeInfo.name} logo`} className="store-logo" />
-        )}
-        <h1>{storeInfo.name}</h1>
-      </div>
-      
-      <div className="info-section">
-        <div className="info-item">
-          <strong>Online Status</strong>
-          <ul>
-            <li>Online: {storeInfo.onlineTrucks || 0} pilot trucks</li>
-          </ul>
-        </div>
-        
-        <div className="info-item">
-          <strong>Store Information</strong>
-          <ul>
-            <li>Chief: <strong>{storeInfo.chiefName || 'Unknown'}</strong></li>
-          </ul>
-        </div>
-      </div>
+    <header className="shop-header">
+      <div className="shop-header__container">
+        <div className="shop-header__main">
+          {/* Shop Logo */}
+          <div className="shop-header__logo">
+            {shopInfo.logoUrl ? (
+              <img src={shopInfo.logoUrl} alt={`${shopInfo.name} logo`} />
+            ) : (
+              <span className="shop-header__logo--placeholder">🏪</span>
+            )}
+          </div>
 
-      <nav className="tab-navigation">
-        <button 
-          className={`tab-button ${activeTab === 'products' ? 'active' : ''}`}
-          onClick={() => handleTabClick('products')}
-        >
-          Sản phẩm {storeInfo.productCount ? `(${storeInfo.productCount})` : ''}
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'gallery' ? 'active' : ''}`}
-          onClick={() => handleTabClick('gallery')}
-        >
-          Gallery
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'followers' ? 'active' : ''}`}
-          onClick={() => handleTabClick('followers')}
-        >
-          Người theo dõi {storeInfo.followerCount ? `(${storeInfo.followerCount})` : ''}
-        </button>
-      </nav>
+          {/* Shop Info */}
+          <div className="shop-header__info">
+            <h1 className="shop-header__name">{shopInfo.name}</h1>
+
+            <div className="shop-header__stats">
+              <div className="shop-header__stat shop-header__stat--positive">
+                <strong>{shopInfo.rating || 99.4}%</strong> positive feedback
+              </div>
+              <div className="shop-header__stat">
+                <strong>{formatNumber(shopInfo.totalProducts || 134)}</strong> items sold
+              </div>
+              <div className="shop-header__stat">
+                <strong>{formatNumber(shopInfo.followers || 2800)}</strong> followers
+              </div>
+            </div>
+
+            {shopInfo.description && (
+              <p className="shop-header__description">{shopInfo.description}</p>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="shop-header__actions">
+            <button className="shop-header__btn">📤 Share</button>
+            <button className="shop-header__btn">📞 Contact</button>
+            <button className="shop-header__btn shop-header__btn--primary">❤️ Save Seller</button>
+          </div>
+        </div>
+
+        {/* Tab navigation (nếu muốn thêm sau này) */}
+        {/* 
+        <ul className="shop-header__tabs">
+          <li onClick={() => handleTabClick('products')}>🛒 Products</li>
+          <li onClick={() => handleTabClick('feedback')}>💬 Feedback</li>
+        </ul>
+        */}
+
+        {/* Search */}
+        <div className="shop-header__search">
+          <input
+            type="text"
+            placeholder={`Search all ${shopInfo.totalProducts || 134} items`}
+          />
+          <span className="shop-header__search__icon">🔍</span>
+        </div>
+      </div>
     </header>
   );
 };

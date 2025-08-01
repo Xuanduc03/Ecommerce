@@ -52,7 +52,6 @@ namespace EcommerceBe.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Create([FromBody] CreateCategoryDto dto)
         {
             try
@@ -73,7 +72,6 @@ namespace EcommerceBe.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryDto dto)
         {
             try
@@ -91,7 +89,6 @@ namespace EcommerceBe.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -105,6 +102,20 @@ namespace EcommerceBe.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi khi xóa danh mục", detail = ex.Message });
+            }
+        }
+
+        [HttpGet("slug/{slug}")]
+        public async Task<IActionResult> GetBySlug(string slug)
+        {
+            try
+            {
+                var result = await _service.GetBySlug(slug);
+                return Ok(new { message = "Lấy danh mục thành công", data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi lấy danh mục theo slug", detail = ex.Message });
             }
         }
 

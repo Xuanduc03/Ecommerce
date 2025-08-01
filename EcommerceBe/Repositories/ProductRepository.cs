@@ -52,35 +52,129 @@ namespace EcommerceBe.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Product product)
+        public async Task UpdateAsync(Guid productId, CreateProductDto dto)
         {
             var existing = await _context.Products
                 .Include(p => p.ProductImages)
                 .Include(p => p.Variants)
-                .FirstOrDefaultAsync(p => p.ProductId == product.ProductId);
+                .Include(p => p.ProductCategories)
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
 
-            if (existing == null) return;
+            if (existing == null)
+                throw new NotFoundException($"Product with ID {productId} not found");
 
-            // Update scalar properties
-            _context.Entry(existing).CurrentValues.SetValues(product);
+            // Update scalar fields
+            existing.ProductName = dto.ProductName;
+            existing.Description = dto.Description;
+            existing.OriginalPrice = dto.OriginalPrice;
+            existing.ShopId = dto.ShopId;
+            existing.UpdatedAt = DateTime.UtcNow;
 
-            // Update Variants (xoá cũ, thêm mới)
-            existing.Variants.Clear();
-            foreach (var variant in product.Variants)
+            // ========================== Variants ==========================
+            var incomingVariantKeys = dto.Variants
+                .Select(v => $"{v.Size}-{v.ColorCode}")
+                .ToHashSet();
+
+            var variantsToRemove = existing.Variants
+                .Where(v => !incomingVariantKeys.Contains($"{v.Size}-{v.ColorCode}"))
+                .ToList();
+
+            foreach (var v in variantsToRemove)
+                _context.ProductVariants.Remove(v);
+
+            foreach (var variant in dto.Variants)
             {
-                existing.Variants.Add(variant);
+                var key = $"{variant.Size}-{variant.ColorCode}";
+                var existingVariant = existing.Variants
+                    .FirstOrDefault(v => key == $"{v.Size}-{v.ColorCode}");
+
+                if (existingVariant != null)
+                {
+                    existingVariant.StockQuantity = variant.StockQuantity;
+                    existingVariant.Price = variant.Price;
+                    existingVariant.BrandNew = variant.BrandNew;
+                    existingVariant.Features = variant.Features;
+                    existingVariant.SeoDescription = variant.SeoDescription;
+                }
+                else
+                {
+                    _context.ProductVariants.Add(new ProductVariant
+                    {
+                        ProductVariantId = Guid.NewGuid(),
+                        ProductId = existing.ProductId,
+                        Size = variant.Size,
+                        ColorCode = variant.ColorCode,
+                        ColorName = variant.ColorName,
+                        StockQuantity = variant.StockQuantity,
+                        Price = variant.Price,
+                        BrandNew = variant.BrandNew,
+                        Features = variant.Features,
+                        SeoDescription = variant.SeoDescription,
+                        ViewsCount = 0,
+                        SalesCount = 0
+                    });
+                }
             }
 
-            // Update Images (xoá cũ, thêm mới)
-            existing.ProductImages.Clear();
-            foreach (var img in product.ProductImages)
+            // ========================== ProductImages ==========================
+            var incomingImageUrls = dto.ImageUrls?.Select(i => i.Trim()).ToHashSet() ?? new HashSet<string>();
+
+            var imagesToRemove = existing.ProductImages
+                .Where(i => !incomingImageUrls.Contains(i.ImageUrl.Trim()))
+                .ToList();
+
+            foreach (var img in imagesToRemove)
+                _context.ProductImages.Remove(img);
+
+            if (dto.ImageUrls != null && dto.ImageUrls.Any())
             {
-                existing.ProductImages.Add(img);
+                for (int i = 0; i < dto.ImageUrls.Count; i++)
+                {
+                    var url = dto.ImageUrls[i].Trim();
+                    var existingImg = existing.ProductImages.FirstOrDefault(i => i.ImageUrl.Trim() == url);
+                    if (existingImg != null)
+                    {
+                        existingImg.IsPrimary = i == 0; // Hình đầu tiên là primary
+                    }
+                    else
+                    {
+                        _context.ProductImages.Add(new ProductImages
+                        {
+                            ProductImageId = Guid.NewGuid(),
+                            ProductId = existing.ProductId,
+                            ImageUrl = url,
+                            IsPrimary = i == 0
+                        });
+                    }
+                }
             }
+
+            // ========================== ProductCategories ==========================
+            existing.ProductCategories.Clear();
+            existing.ProductCategories.Add(new ProductCategories
+            {
+                ProductId = existing.ProductId,
+                CategoryId = dto.CategoryId
+            });
+            existing.ProductCategories.Add(new ProductCategories
+            {
+                ProductId = existing.ProductId,
+                CategoryId = dto.SubcategoryId
+            });
 
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<Product>> GetTopProductsByCategoryAsync(Guid categoryId, int count)
+        {
+            return await _context.Products
+                .Where(p => !p.IsDeleted && p.ProductCategories.Any(pc => pc.CategoryId == categoryId))
+                .OrderByDescending(p => p.Variants.Sum(v => v.SalesCount))
+                .Include(p => p.ProductCategories).ThenInclude(pc => pc.Category)
+                .Include(p => p.ProductImages)
+                .Include(p => p.Variants)
+                .ToListAsync();
+        }
 
         public async Task DeleteAsync(Guid productId)
         {
@@ -92,57 +186,71 @@ namespace EcommerceBe.Repositories
             }
         }
 
+        // Lấy sản phẩm theo danh mục 
+        public async Task<List<Product>> GetProductsByCategoryTreeAsync(Guid categoryId)
+        {
+            // Bước 1: Lấy toàn bộ danh mục
+            var allCategories = await _context.Categories.ToListAsync();
+
+            // Bước 2: Tìm đệ quy tất cả danh mục con của categoryId
+            List<Guid> GetAllChildCategoryIds(Guid parentId)
+            {
+                var children = allCategories
+                    .Where(c => c.ParentCategoryId == parentId)
+                    .Select(c => c.CategoryId)
+                    .ToList();
+
+                var all = new List<Guid>(children);
+                foreach (var childId in children)
+                {
+                    all.AddRange(GetAllChildCategoryIds(childId));
+                }
+                return all;
+            }
+
+            var allCategoryIds = new List<Guid> { categoryId };
+            allCategoryIds.AddRange(GetAllChildCategoryIds(categoryId));
+
+            // Bước 3: Lấy sản phẩm thuộc tất cả categoryId
+            var products = await _context.Products
+                .Where(p => !p.IsDeleted && p.ProductCategories.Any(pc => allCategoryIds.Contains(pc.CategoryId)))
+                .Include(p => p.ProductImages)
+                .Include(p => p.Variants)
+                .Include(p => p.ProductCategories)
+                    .ThenInclude(pc => pc.Category)
+                .ToListAsync();
+
+            return products;
+        }
+
+
+
+        public async Task UpdateStockAsync(Guid productId, int newStock)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null) throw new Exception("Product not found");
+
+            product.StockQuantity = newStock;
+            await _context.SaveChangesAsync();
+        }
+
         //filter 
-        public async Task<List<Product>> SearchProductsAsync(ProductFilterDto filter)
+        public async Task<List<Product>> SearchProductsAsync(string keyword)
         {
             var query = _context.Products
                 .Include(p => p.ProductImages)
                 .Include(p => p.Variants)
                 .Include(p => p.ProductCategories)
-                .Where(p => p.IsActive && !p.IsDeleted)
-                .AsQueryable();
+                .Where(p => p.IsActive && !p.IsDeleted);
 
-            if (!string.IsNullOrWhiteSpace(filter.Keyword))
+            if (!string.IsNullOrWhiteSpace(keyword))
             {
-                query = query.Where(p => p.ProductName.Contains(filter.Keyword));
-            }
-
-            if (filter.CategoryId.HasValue)
-            {
-                query = query.Where(p =>
-                    p.ProductCategories.Any(pc => pc.CategoryId == filter.CategoryId));
-            }
-
-            if (filter.SubCategoryId.HasValue)
-            {
-                query = query.Where(p =>
-                    p.ProductCategories.Any(pc => pc.CategoryId == filter.SubCategoryId));
-            }
-
-            if (!string.IsNullOrWhiteSpace(filter.Size))
-            {
-                query = query.Where(p =>
-                    p.Variants.Any(v => v.Size == filter.Size));
-            }
-
-            if (!string.IsNullOrWhiteSpace(filter.ColorCode))
-            {
-                query = query.Where(p =>
-                    p.Variants.Any(v => v.ColorCode == filter.ColorCode));
-            }
-
-            if (filter.MinPrice.HasValue)
-            {
-                query = query.Where(p => p.OriginalPrice >= filter.MinPrice);
-            }
-
-            if (filter.MaxPrice.HasValue)
-            {
-                query = query.Where(p => p.OriginalPrice <= filter.MaxPrice);
+                query = query.Where(p => p.ProductName.Contains(keyword));
             }
 
             return await query.ToListAsync();
         }
+
 
         // quan ly ton kho 
         public async Task<List<ProductInventoryDto>> GetInventoryByShopIdAsync(Guid shopId)

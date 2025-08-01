@@ -44,10 +44,12 @@ const { RangePicker } = DatePicker;
 interface ShopDto {
   shopId: string;
   sellerId: string;
+  sellerName?: string;
   name: string;
   contactPhone: string;
   description: string;
   logoUrl: string;
+  isActive?: boolean;
   bannerUrl: string;
   createdAt?: string;
   updatedAt?: string;
@@ -70,13 +72,14 @@ interface UpdateShopDto {
   description: string;
   logoUrl: string;
   bannerUrl: string;
+  isActive?: boolean;
 }
 
 interface FilterState {
   searchText: string;
   status: string;
   dateRange: [dayjs.Dayjs, dayjs.Dayjs] | null;
-  sellerId: string;
+  sellerName: string;
 }
 
 const ShopManagement: React.FC = () => {
@@ -93,7 +96,7 @@ const ShopManagement: React.FC = () => {
     searchText: '',
     status: '',
     dateRange: null,
-    sellerId: ''
+    sellerName: ''
   });
   const [showFilters, setShowFilters] = useState(false);
   const token = localStorage.getItem('authToken');
@@ -125,7 +128,7 @@ const ShopManagement: React.FC = () => {
       const searchLower = filters.searchText.toLowerCase();
       result = result.filter(shop =>
         shop.name.toLowerCase().includes(searchLower) ||
-        shop.sellerId.toLowerCase().includes(searchLower) ||
+        shop.sellerName?.toLowerCase().includes(searchLower) ||
         shop.contactPhone.includes(searchLower) ||
         shop.shopId.toLowerCase().includes(searchLower) ||
         (shop.description && shop.description.toLowerCase().includes(searchLower))
@@ -138,9 +141,9 @@ const ShopManagement: React.FC = () => {
     }
 
     // Seller ID filter
-    if (filters.sellerId) {
+    if (filters.sellerName) {
       result = result.filter(shop =>
-        shop.sellerId.toLowerCase().includes(filters.sellerId.toLowerCase())
+        shop.sellerName?.toLowerCase().includes(filters.sellerName.toLowerCase())
       );
     }
 
@@ -177,6 +180,7 @@ const ShopManagement: React.FC = () => {
       const shopData = response.data.map((shop: any) => ({
         shopId: shop.shopId || shop.id,
         sellerId: shop.sellerId,
+        sellerName: shop?.sellerName,
         name: shop.name,
         contactPhone: shop.contactPhone,
         description: shop.description,
@@ -237,36 +241,36 @@ const ShopManagement: React.FC = () => {
   };
 
 
- const handleUpload = async (file: any, imageType: 'logo' | 'banner') => {
-  const shopId = isEditing && currentShop ? currentShop.shopId : '00000000-0000-0000-0000-000000000000';
-  const formData = new FormData();
+  const handleUpload = async (file: any, imageType: 'logo' | 'banner') => {
+    const shopId = isEditing && currentShop ? currentShop.shopId : '00000000-0000-0000-0000-000000000000';
+    const formData = new FormData();
 
-  // Tên key phải đúng với model bên server
-  formData.append('File', file);           
-  formData.append('ShopId', shopId);       
-  formData.append('ImageType', imageType); 
+    // Tên key phải đúng với model bên server
+    formData.append('File', file);
+    formData.append('ShopId', shopId);
+    formData.append('ImageType', imageType);
 
-  try {
-    const response = await axios.post('https://localhost:7040/api/shop/upload-image', formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const response = await axios.post('https://localhost:7040/api/shop/upload-image', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const url = response.data[`${imageType}Url`];
-    if (imageType === 'logo') {
-      setLogoUrl(url);
-    } else {
-      setBannerUrl(url);
+      const url = response.data[`${imageType}Url`];
+      if (imageType === 'logo') {
+        setLogoUrl(url);
+      } else {
+        setBannerUrl(url);
+      }
+      message.success(`Tải ${imageType === 'logo' ? 'logo' : 'banner'} thành công`);
+      return false;
+    } catch (error: any) {
+      console.error('Upload error:', error.response?.data);
+      message.error(error.response?.data?.message || `Lỗi khi tải ${imageType === 'logo' ? 'logo' : 'banner'}`);
+      return false;
     }
-    message.success(`Tải ${imageType === 'logo' ? 'logo' : 'banner'} thành công`);
-    return false;
-  } catch (error: any) {
-    console.error('Upload error:', error.response?.data);
-    message.error(error.response?.data?.message || `Lỗi khi tải ${imageType === 'logo' ? 'logo' : 'banner'}`);
-    return false;
-  }
-};
+  };
 
 
   const handleOk = async () => {
@@ -279,6 +283,7 @@ const ShopManagement: React.FC = () => {
         description: values.description,
         logoUrl: logoUrl || '',
         bannerUrl: bannerUrl || '',
+        isActive: values.isActive === 'true',
         ...(isEditing && { shopId: currentShop?.shopId }),
       };
 
@@ -315,7 +320,7 @@ const ShopManagement: React.FC = () => {
       searchText: '',
       status: '',
       dateRange: null,
-      sellerId: ''
+      sellerName: ''
     });
   };
 
@@ -382,14 +387,14 @@ const ShopManagement: React.FC = () => {
     },
     {
       title: 'Seller',
-      dataIndex: 'sellerId',
-      key: 'sellerId',
+      dataIndex: 'sellerName',
+      key: 'sellerName',
       width: 120,
       ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
           <Tag icon={<UserOutlined />} color="blue">
-            {text.substring(0, 8)}...
+            {text?.substring(0, 8)}...
           </Tag>
         </Tooltip>
       ),
@@ -700,8 +705,8 @@ const ShopManagement: React.FC = () => {
                   <Input
                     placeholder="Nhập Seller ID"
                     allowClear
-                    value={filters.sellerId}
-                    onChange={(e) => setFilters(prev => ({ ...prev, sellerId: e.target.value }))}
+                    value={filters.sellerName}
+                    onChange={(e) => setFilters(prev => ({ ...prev, sellerName: e.target.value }))}
                   />
                 </Col>
                 <Col xs={24} sm={12}>
@@ -811,6 +816,18 @@ const ShopManagement: React.FC = () => {
             </Col>
           </Row>
 
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item name="isActive" label="Tình trạng hoạt động">
+                <Select
+                  options={[
+                    { value: 'true', label: 'Hoạt động' },
+                    { value: 'false', label: 'Cấm' },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item
             name="name"
             label="Tên cửa hàng"

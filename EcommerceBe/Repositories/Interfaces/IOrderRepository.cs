@@ -9,9 +9,10 @@ namespace EcommerceBe.Repositories.Interfaces
         Task<Order> GetOrderByIdAsync(Guid orderId);
         Task<List<Order>> GetOrdersByUserIdAsync(Guid userId);
         Task UpdateOrderAsync(Order order);
-        Task<List<Order>> GetAllOrderAsync(string? search, int page, int pageSize);
+        Task<List<Order>> GetAllOrderAsync();
         Task<List<Order>> GetOrdersByDateRangeAsync(DateTime from, DateTime to);
         Task CancelOrderAsync(Guid orderId, string reason);
+        Task<List<Order>> GetOrdersByShopIdAsync(Guid shopId);
         Task<bool> CheckOrderBelongsToUserAsync(Guid orderId, Guid userId);
     }
 }

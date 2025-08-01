@@ -12,6 +12,8 @@ import flashSale1 from "../../assets/images/flashsale1.webp";
 import axios from 'axios';
 import type { ApiResponse } from '../../redux/categorySlice';
 import type { ProductCardProps } from '../../components/Product/ProductCard';
+import ShopListing from '../../components/Shop/ListShop';
+import { toast } from 'react-toastify';
 
 const API_URL = 'https://localhost:7040/api';
 const slides = [
@@ -42,6 +44,7 @@ const slides = [
 export const Home: React.FC = () => {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState<ProductCardProps[]>([]);
+  const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const token = localStorage.getItem('authToken');
@@ -106,33 +109,52 @@ export const Home: React.FC = () => {
     fetchProducts();
   }, []);
 
+ const fetchShops = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('https://localhost:7040/api/shop', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const shopData = response.data.map((shop: any) => ({
+        shopId: shop.shopId || shop.id,
+        name: shop.name,
+        contactPhone: shop.contactPhone,
+        description: shop.description,
+        logoUrl: shop.logoUrl,
+        bannerUrl: shop.bannerUrl,
+        createdAt: shop.createdAt,
+        updatedAt: shop.updatedAt,
+        status: shop.status || 'active', 
+      }));
+
+      setShops(shopData);
+    } catch (error: any) {
+      toast(error.response?.data?.message || 'Lỗi khi tải danh sách cửa hàng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShops();
+  }, []);
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
     <div>
-      <Carousel
+      {/* <Carousel
         slides={slides}
         autoPlay={true}
         interval={4000}
         showArrows={true}
         showIndicators={true}
-      />
+      /> */}
 
       <ListCategory categories={categories} />
 
-      <FlashSaleSection
-        countdown="01:43:24"
-        products={[
-          {
-            id: '1',
-            image: flashSale1,
-            price: 738000,
-            discountPercent: 44,
-            badgeText: 'ĐANG BÁN CHẠY'
-          }
-        ]}
-      />
+      <ShopListing shops={shops}/>
 
       <ProductListSection
         title="GỢI Ý HÔM NAY"

@@ -12,6 +12,7 @@ namespace EcommerceBe.Services.Interfaces
         //interface forgot password
         Task<bool> ForgotPasswordAsync(ForgotPasswordRequest model);
         Task<bool> ResetPasswordAsync(ResetPasswordRequest model);
+        Task<bool> ChangePasswordAsync(Guid userId, ChangePasswordDto model);
 
         //interface get profile and update profile
         Task<UserProfileDto> GetProfileAsync(Guid userId);

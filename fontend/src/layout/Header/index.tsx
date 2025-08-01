@@ -10,6 +10,14 @@ import axios from 'axios';
 
 const API_URL = 'https://localhost:7040/api';
 
+
+interface Product {
+    productId: string;
+    productName: string;
+    originalPrice: number;
+    imageUrls: string[];
+}
+
 interface Category {
     id: string;
     name: string;
@@ -29,6 +37,10 @@ const Header: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [searching, setSearching] = useState(false);
+    const [showResults, setShowResults] = useState(false);
+
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const token = localStorage.getItem('authToken');
 
@@ -78,10 +90,25 @@ const Header: React.FC = () => {
         fetchCategories();
     }, []);
 
-    const handleSearch = (e: React.FormEvent) => {
+    const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        navigate(`/search?query=${searchTerm}&category=${selectedCategory}`);
+        if (!searchTerm.trim()) return;
+
+        try {
+            setSearching(true);
+            const res = await axios.get(`${API_URL}/product/search`, {
+                params: { keyword: searchTerm }
+            });
+            setProducts(res.data || []);
+            setShowResults(true);
+
+        } catch (err) {
+            console.error('Lỗi khi tìm kiếm:', err);
+        } finally {
+            setSearching(false);
+        }
     };
+
 
     const handleLogout = () => {
         dispatch(logout());
@@ -124,7 +151,7 @@ const Header: React.FC = () => {
                     <div className={styles['top-right']}>
                         <span>Giao hàng đến</span>
                         <span>Danh sách theo dõi</span>
-                        <span>Hồ sơ</span>
+                        <Link to={'/me'}>Hồ sơ</Link>
                         <FaBell className={styles.icon} />
                         <CountCart>
                             <div className={styles['cart-wrapper']}>
@@ -154,21 +181,41 @@ const Header: React.FC = () => {
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                         />
-                        <select
-                            className={styles['search-category']}
-                            value={selectedCategory}
-                            onChange={e => setSelectedCategory(e.target.value)}
-                        >
-                            <option value="">Tất cả danh mục</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.slug}>{cat.name}</option>
-                            ))}
-                        </select>
                         <button type="submit" className={styles['search-btn-ebay']}>Tìm kiếm</button>
-                        <span className={styles['search-advanced']}>Nâng cao</span>
                     </form>
+
+                    {showResults && products.length > 0 && (
+                        <div className={styles['search-results']}>
+                            <button
+                                className={styles['close-button']}
+                                onClick={() => setShowResults(false)}
+                            >
+                                ×
+                            </button>
+                            {products.map(product => (
+                                <Link
+                                    key={product.productId}
+                                    to={`/product/${product.productId}`}
+                                    className={styles['search-result-item']}
+                                >
+                                    <img
+                                        src={product.imageUrls?.[0] || '/no-img.jpg'}
+                                        alt={product.productName}
+                                        className={styles['search-result-image']}
+                                    />
+                                    <div className={styles['search-result-info']}>
+                                        <h4>{product.productName}</h4>
+                                        <p>{product.originalPrice.toLocaleString()} đ</p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
+
+
+
 
             {/* Menu hiển thị danh mục con */}
             <div className={styles['header-menu']}>

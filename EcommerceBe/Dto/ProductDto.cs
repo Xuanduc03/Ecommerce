@@ -119,6 +119,7 @@ namespace EcommerceBe.Dto
         public decimal OriginalPrice { get; set; }
         public decimal FinalPrice { get; set; } = 0;
         public double DiscountPercent { get; set; } = 0;
+        public int StockQuantity { get; set; }
         public Guid ShopId { get; set; }
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }
@@ -130,6 +131,7 @@ namespace EcommerceBe.Dto
 
     public class ProductVariantResponseDto
     {
+        public Guid VariantId { get; set; }
         public string Size { get; set; }
         public string ColorCode { get; set; }
         public string ColorName { get; set; }

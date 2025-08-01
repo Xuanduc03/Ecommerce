@@ -6,7 +6,7 @@ namespace EcommerceBe.Services.Interfaces
 {
     public interface IShopService
     {
-        Task<CreateShopDto> GetShopByIdAsync(Guid shopId);
+        Task<ShopResponseDto> GetShopByIdAsync(Guid shopId);
         Task<ShopResponseDto> GetShopBySellerIdAsync(Guid sellerId);
         Task<List<ShopResponseDto>> GetAllShopsAsync();
         Task CreateShopAsync(CreateShopDto shop, Guid sellerId);

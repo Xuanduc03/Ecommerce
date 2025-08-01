@@ -8,6 +8,8 @@ import Login from "../components/Auth/Login";
 import ForgotPassword from "../components/Auth/ForgotPassword";
 import CreateShopForm from "../components/Shop/CreateShopForm";
 import CategoryProduct from "../components/Category/ListProductByCategory";
+import ShopPage from "../pages/ShopPage";
+import { ProfilePage } from "../pages/ProfilePage";
 
 const publicRoute : IRoute[] = [
     {path: "/", component: Home},
@@ -16,7 +18,9 @@ const publicRoute : IRoute[] = [
     {path: '/forgot-password', component: ForgotPassword, layout: null},
     {path: '/signup', component: SignUp, layout: null},
     {path: '/cart', component: CartPage},
-    {path: '/category/collectibles', component: CategoryProduct},
+    {path: "/shop/:shopId", component: ShopPage},
+    {path: '/me', component: ProfilePage},
+    {path: '/category/:slug', component: CategoryProduct},
     {path: '/checkout', component: CheckOut, layout: null},
     {path: "/create-shop", component: CreateShopForm, layout: null}
 ];

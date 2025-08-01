@@ -26,9 +26,9 @@ namespace EcommerceBe.Controllers
                 : throw new UnauthorizedAccessException("Invalid UserId");
         }
 
-        // POST: /api/order
+        // === Buyer ===
+
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> CreateOrder([FromBody] OrderCreateDto dto)
         {
             var userId = GetCurrentUserId();
@@ -36,9 +36,7 @@ namespace EcommerceBe.Controllers
             return Ok(new { message = "Order created successfully", orderId });
         }
 
-        // GET: /api/order/{orderId}
         [HttpGet("{orderId}")]
-        [Authorize]
         public async Task<IActionResult> GetOrder(Guid orderId)
         {
             var userId = GetCurrentUserId();
@@ -49,9 +47,7 @@ namespace EcommerceBe.Controllers
             return Ok(order);
         }
 
-        // GET: /api/order/user
         [HttpGet("user")]
-        [Authorize]
         public async Task<IActionResult> GetUserOrders()
         {
             var userId = GetCurrentUserId();
@@ -59,18 +55,7 @@ namespace EcommerceBe.Controllers
             return Ok(orders);
         }
 
-        // PUT: /api/order/{orderId}/status?status=Shipped
-        [HttpPut("{orderId}/status")]
-        [Authorize(Roles = "Seller,Admin")]
-        public async Task<IActionResult> UpdateStatus(Guid orderId, [FromQuery] string status)
-        {
-            await _orderService.UpdateOrderStatusAsync(orderId, status);
-            return Ok(new { message = "Order status updated" });
-        }
-
-        // PUT: /api/order/{orderId}/cancel
         [HttpPut("{orderId}/cancel")]
-        [Authorize]
         public async Task<IActionResult> CancelOrder(Guid orderId, [FromBody] CancelOrderDto dto)
         {
             var userId = GetCurrentUserId();
@@ -79,6 +64,43 @@ namespace EcommerceBe.Controllers
 
             await _orderService.CancelOrderAsync(orderId, dto.Reason);
             return Ok(new { message = "Order cancelled" });
+        }
+
+        [HttpGet("{shopid}")]
+        public async Task<IActionResult> GetOrderByShop(Guid shopid)
+        {
+            try
+            {
+                var orders = await _orderService.GetAllOrderAsync();
+                return Ok(orders);
+            }catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        // === Admin ===
+
+        [HttpGet("")]
+        public async Task<IActionResult> GetAllOrders()
+        {
+            var orders = await _orderService.GetAllOrderAsync();
+            return Ok(orders);
+        }
+
+        [HttpGet("admin/{orderId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetOrderByIdForAdmin(Guid orderId)
+        {
+            var order = await _orderService.GetOrderByIdAsync(orderId);
+            return Ok(order);
+        }
+
+        [HttpPut("admin/{orderId}/status")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminUpdateOrderStatus(Guid orderId, [FromQuery] string status)
+        {
+            await _orderService.UpdateOrderStatusAsync(orderId, status);
+            return Ok(new { message = "Order status updated by admin" });
         }
     }
 }

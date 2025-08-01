@@ -6,6 +6,7 @@ namespace EcommerceBe.Repositories.Interfaces
     {
         Task<List<Category>> GetAllAsync();
         Task<Category?> GetByIdAsync(Guid id);
+        Task<Category?> GetSlugAsync(string slug);
         Task AddAsync(Category category);
         Task UpdateAsync(Category category);
         Task DeleteAsync(Category category);

@@ -1,0 +1,424 @@
+// Variables
+$primary-color: #2563eb;
+$primary-hover: #1d4ed8;
+$primary-light: #dbeafe;
+$secondary-color: #64748b;
+$text-color: #1f2937;
+$text-muted: #6b7280;
+$background: #ffffff;
+$border-color: #e5e7eb;
+$hover-bg: #f8fafc;
+$active-bg: #2563eb;
+$active-text: #ffffff;
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$border-radius: 16px;
+$border-radius-sm: 8px;
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.sidebar {
+  width: 280px;
+  min-height: 100vh;
+  background: $background;
+  border-right: 1px solid $border-color;
+  padding: 2rem 0;
+  position: sticky;
+  top: 0;
+  box-shadow: $shadow-sm;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  @media (max-width: 1024px) {
+    width: 240px;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    min-height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid $border-color;
+    padding: 1.5rem 0;
+  }
+
+  .user-info {
+    padding: 0 1.5rem 2rem 1.5rem;
+    border-bottom: 1px solid rgba($border-color, 0.6);
+    margin-bottom: 1.5rem;
+
+    .avatar {
+      @include flex-start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: $border-radius;
+      border: 1px solid rgba($border-color, 0.5);
+      transition: $transition;
+
+      &:hover {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-color: rgba($primary-color, 0.2);
+        transform: translateY(-1px);
+        box-shadow: $shadow-md;
+      }
+
+      img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid white;
+        box-shadow: $shadow-md;
+        transition: $transition;
+
+        &:hover {
+          transform: scale(1.05);
+          box-shadow: $shadow-lg;
+        }
+      }
+
+      .username {
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: $text-color;
+        letter-spacing: -0.3px;
+        line-height: 1.3;
+      }
+    }
+
+    .edit-profile {
+      @include flex-start;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: rgba($primary-color, 0.05);
+      border: 1px solid rgba($primary-color, 0.15);
+      border-radius: $border-radius-sm;
+      cursor: pointer;
+      transition: $transition;
+      color: $primary-color;
+      font-weight: 600;
+      font-size: 0.9rem;
+
+      &:hover {
+        background: rgba($primary-color, 0.1);
+        border-color: rgba($primary-color, 0.3);
+        transform: translateY(-1px);
+        box-shadow: $shadow-sm;
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      svg {
+        transition: $transition;
+      }
+
+      &:hover svg {
+        transform: rotate(15deg);
+      }
+    }
+  }
+
+  .sidebar-nav {
+    padding: 0 1rem;
+
+    .nav-item {
+      position: relative;
+      margin-bottom: 0.5rem;
+      padding: 1rem 1.25rem;
+      border-radius: $border-radius-sm;
+      cursor: pointer;
+      transition: $transition;
+      font-weight: 500;
+      color: $text-color;
+      background: transparent;
+      border: 1px solid transparent;
+      overflow: hidden;
+
+      // Hover effect background
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba($primary-color, 0.05), transparent);
+        transition: left 0.6s ease;
+        z-index: 0;
+      }
+
+      // Active indicator
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 0;
+        background: linear-gradient(135deg, $primary-color 0%, $primary-hover 100%);
+        border-radius: 0 4px 4px 0;
+        transition: height 0.3s ease;
+        z-index: 1;
+      }
+
+      span {
+        position: relative;
+        z-index: 2;
+        font-size: 0.95rem;
+        letter-spacing: 0.2px;
+      }
+
+      // Hover state
+      &:hover {
+        background: rgba($primary-color, 0.04);
+        border-color: rgba($primary-color, 0.1);
+        transform: translateX(4px);
+        color: $primary-hover;
+
+        &::before {
+          left: 100%;
+        }
+
+        &::after {
+          height: 20px;
+        }
+      }
+
+      // Active state
+      &.active {
+        background: linear-gradient(135deg, $primary-color 0%, $primary-hover 100%);
+        color: $active-text;
+        border-color: $primary-hover;
+        transform: translateX(8px);
+        box-shadow: $shadow-md;
+
+        &::after {
+          height: 100%;
+          width: 4px;
+          background: rgba(255, 255, 255, 0.8);
+        }
+
+        span {
+          font-weight: 600;
+        }
+
+        // Active glow effect
+        &::before {
+          background: rgba(255, 255, 255, 0.1);
+          left: 0;
+        }
+      }
+
+      // Click animation
+      &:active {
+        transform: translateX(2px) scale(0.98);
+      }
+    }
+  }
+
+  // Mobile responsive
+  @media (max-width: 768px) {
+    .user-info {
+      padding: 0 1rem 1.5rem 1rem;
+
+      .avatar {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+
+        img {
+          width: 50px;
+          height: 50px;
+        }
+
+        .username {
+          font-size: 1rem;
+        }
+      }
+
+      .edit-profile {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+
+        svg {
+          width: 10px;
+          height: 10px;
+        }
+      }
+    }
+
+    .sidebar-nav {
+      padding: 0 0.75rem;
+
+      .nav-item {
+        padding: 0.8rem 1rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+
+        &:hover {
+          transform: translateX(2px);
+        }
+
+        &.active {
+          transform: translateX(4px);
+        }
+      }
+    }
+  }
+
+  // Tablet responsive
+  @media (max-width: 1024px) and (min-width: 769px) {
+    .user-info {
+      .avatar {
+        .username {
+          font-size: 1.1rem;
+        }
+      }
+    }
+
+    .sidebar-nav {
+      .nav-item {
+        padding: 0.9rem 1.1rem;
+      }
+    }
+  }
+
+  // Animation delays for nav items
+  .nav-item {
+    animation: slideInLeft 0.5s ease-out;
+    animation-fill-mode: both;
+
+    @for $i from 1 through 10 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.1}s;
+      }
+    }
+  }
+
+  // Scroll behavior for mobile
+  @media (max-width: 768px) {
+    .sidebar-nav {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.5rem;
+      padding: 0 1rem;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      .nav-item {
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// Keyframes
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Loading skeleton (if needed)
+.sidebar-skeleton {
+  .user-info {
+    .avatar {
+      img {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+      }
+    }
+  }
+
+  .nav-item {
+    background: linear-gradient(90deg, #f8f8f8 25%, #e8e8e8 50%, #f8f8f8 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    color: transparent;
+  }
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Dark theme support (optional)
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    color: #f9fafb;
+
+    .user-info {
+      border-bottom-color: #374151;
+
+      .avatar {
+        background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+        border-color: #4b5563;
+
+        .username {
+          color: #f9fafb;
+        }
+      }
+
+      .edit-profile {
+        background: rgba($primary-color, 0.15);
+        border-color: rgba($primary-color, 0.3);
+        color: #60a5fa;
+      }
+    }
+
+    .sidebar-nav {
+      .nav-item {
+        color: #d1d5db;
+
+        &:hover {
+          background: rgba($primary-color, 0.1);
+          color: #60a5fa;
+        }
+
+        &.active {
+          background: linear-gradient(135deg, $primary-color 0%, $primary-hover 100%);
+          color: white;
+        }
+      }
+    }
+  }
+}

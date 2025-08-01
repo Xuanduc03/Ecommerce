@@ -1,17 +1,18 @@
-// CartItem.tsx
 import React from "react";
-import classNames from "classnames/bind";
-import styles from "./CartItem.module.scss";
 import { useNavigate } from "react-router-dom";
-
-const cx = classNames.bind(styles);
+import "./CartItem.scss";
+import { useDispatch } from "react-redux";
+import { removeItemLocally } from "../../../redux/cartSlice";
 
 export interface CartItemProps {
   item: {
-    _id: string;
+    productId: string;
     productName: string;
     images: string[];
     price: number;
+    quantity: number;
+    color?: string;
+    size?: string;
     originalPrice?: number;
     condition?: string;
     seller: {
@@ -27,61 +28,66 @@ export interface CartItemProps {
 
 const CartItem: React.FC<CartItemProps> = ({ item, onRemoveItem, onSaveForLater }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // ✅ Lấy dispatch thật
+
+  const formatVND = (price: number): string => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
 
   const handleGoDetail = () => {
-    navigate(`/product/${item._id}`);
+    navigate(`/product/${item.productId}`);
+  };
+
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dispatch(removeItemLocally({ id: item.productId, color: item.color, size: item.size })); // ✅ Truyền đủ id + biến thể
   };
 
   return (
-    <div className={cx("cart-item")}>
-      <div className={cx("seller-info")}>
-        <span className={cx("seller-name")}>{item.seller.name}</span>
-        <span className={cx("seller-rating")}>{item.seller.rating}% positive feedback</span>
-      </div>
-
-      <div className={cx("item-content")}>
-        <div className={cx("item-image")} onClick={handleGoDetail}>
+    <div className="cart-item">
+      <div className="item-content">
+        <div className="item-image" onClick={handleGoDetail}>
           <img src={item.images[0]} alt={item.productName} />
         </div>
 
-        <div className={cx("item-details")}>
-          <h3 className={cx("item-title")} onClick={handleGoDetail}>
+        <div className="item-details">
+          <h3 className="item-title" onClick={handleGoDetail}>
             {item.productName}
           </h3>
-          
-          {item.certified && (
-            <div className={cx("certified-badge")}>Certified - Refurbished</div>
-          )}
-          
-          {item.condition && (
-            <div className={cx("item-condition")}>{item.condition}</div>
+
+          {(item.color || item.size) && (
+            <p className="variant">
+              Biến thể: {item.color && <span>{item.color}</span>} {item.size && <span>- {item.size}</span>}
+            </p>
           )}
 
-          <div className={cx("price-section")}>
-            <span className={cx("current-price")}>US ${item.price.toLocaleString()}</span>
-            {item.originalPrice && (
-              <span className={cx("original-price")}>US ${item.originalPrice.toLocaleString()}</span>
+          <p className="quantity">Số lượng: x{item.quantity}</p>
+
+          <div className="price-section">
+            <span className="current-price">
+              {formatVND(item.price * item.quantity)}
+            </span>
+            {typeof item.originalPrice === "number" && (
+              <span className="original-price">
+                {formatVND(item.originalPrice * item.quantity)}
+              </span>
             )}
           </div>
 
-          {item.returnPolicy && (
-            <div className={cx("return-policy")}>{item.returnPolicy}</div>
-          )}
+          {item.returnPolicy && <div className="return-policy">{item.returnPolicy}</div>}
         </div>
       </div>
 
-      <div className={cx("item-actions")}>
-        <button 
-          className={cx("save-btn")} 
-          onClick={() => onSaveForLater(item._id)}
-        >
-          Save for later
+      <div className="item-actions">
+        <button className="save-btn" onClick={() => onSaveForLater(item.productId)}>
+          Lưu để mua sau
         </button>
-        <button 
-          className={cx("remove-btn")} 
-          onClick={() => onRemoveItem(item._id)}
-        >
-          Remove
+        <button className="remove-btn" onClick={handleRemove}>
+          Xóa
         </button>
       </div>
     </div>

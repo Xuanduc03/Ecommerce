@@ -89,9 +89,8 @@ namespace EcommerceBe.Controllers
             }
         }
 
-        // PUT: /api/product/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] CreateProductDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductDto dto)
         {
             try
             {
@@ -108,7 +107,28 @@ namespace EcommerceBe.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Failed to update product", details = ex.Message });
+                string inner = ex.InnerException?.ToString() ?? "";
+                return StatusCode(500, new
+                {
+                    message = "Failed to update product",
+                    details = ex.Message,
+                    innerException = inner
+                });
+            }
+        }
+
+        // đề xuất sản phẩm theo danh mục 
+        [HttpGet("suggested-by-category/{categoryId}")]
+        public async Task<IActionResult> GetSuggestedProductsByCategory(Guid categoryId, [FromQuery] int count = 10)
+        {
+            try
+            {
+                var result = await _productService.GetTopProductsByCategoryAsync(categoryId, count);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
         }
 
@@ -132,12 +152,12 @@ namespace EcommerceBe.Controllers
         }
 
         // POST: /api/product/search
-        [HttpPost("search")]
-        public async Task<IActionResult> Search([FromBody] ProductFilterDto filter)
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string keyword)
         {
             try
             {
-                var result = await _productService.SearchProductsAsync(filter);
+                var result = await _productService.SearchProductsAsync(keyword);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -145,6 +165,7 @@ namespace EcommerceBe.Controllers
                 return StatusCode(500, new { message = "Failed to search products", details = ex.Message });
             }
         }
+
 
         // GET: /api/product/inventory?sellerId=...
         [HttpGet("inventory")]
@@ -178,6 +199,22 @@ namespace EcommerceBe.Controllers
             {
                 return StatusCode(500, new { message = "Failed to explore products", details = ex.Message });
             }
+
+        }
+
+        [HttpGet("by-category/{categoryId}")]
+        public async Task<IActionResult> GetProductsByCategory(Guid categoryId)
+        {
+            try
+            {
+                var products = await _productService.GetProductsByCategoryAsync(categoryId);
+                return Ok((products));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to explore products", details = ex.Message });
+            }
+
         }
 
         [HttpPost("image")]

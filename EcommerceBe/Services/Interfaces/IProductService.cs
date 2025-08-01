@@ -10,13 +10,13 @@ namespace EcommerceBe.Services.Interfaces
         Task<ProductResponseDto> GetByIdAsync(Guid productId);
         Task<List<ProductResponseDto>> GetByShopIdAsync(Guid shopId);
         Task<List<ProductResponseDto>> GetAllProductsAsync();
-        Task<List<ProductResponseDto>> SearchProductsAsync(ProductFilterDto filter);
+        Task<List<ProductResponseDto>> SearchProductsAsync(string keyword);
         Task<PagedResultDto<ProductResponseDto>> QueryProductsAsync(ProductQueryDto queryDto);
-
+        Task<List<ProductResponseDto>> GetTopProductsByCategoryAsync(Guid categoryId, int count = 10);
         Task CreateProductAsync(CreateProductDto dto);
         Task UpdateProductAsync(Guid productId, CreateProductDto dto);
         Task DeleteProductAsync(Guid productId);
-
+        Task<List<ProductResponseDto>> GetProductsByCategoryAsync(Guid categoryId);
         Task<List<ProductInventoryDto>> GetInventoryBySellerAsync(Guid sellerId);
 
     }

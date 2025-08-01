@@ -63,6 +63,25 @@ namespace EcommerceBe.Services
                 .ToListAsync();
         }
 
+        public async Task<List<ReviewDto>> GetReviewsByShopAsync(Guid shopId)
+        {
+            return await _context.Reviews
+                .Where(r => r.product.ShopId == shopId)
+                .Select(r => new ReviewDto
+                {
+                    ReviewId = r.ReviewId,
+                    UserId = r.UserId,
+                    UserName = r.user.Username,
+                    ProductId = r.ProductId,
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    CreateAt = r.CreateAt
+                })
+                .ToListAsync();
+        }
+
+
+
         public async Task DeleteReviewAsync(Guid reviewId, Guid userId)
         {
             var review = await _context.Reviews.FirstOrDefaultAsync(r => r.ReviewId == reviewId && r.UserId == userId);

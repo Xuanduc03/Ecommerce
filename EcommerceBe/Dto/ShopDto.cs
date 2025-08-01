@@ -5,6 +5,7 @@
         public Guid ShopId { get; set; }
         public string Name { get; set; }
         public Guid SellerId { get; set; }
+        public string SellerName { get; set; }
         public string Description { get; set; }
         public string ContactPhone { get; set; }
         public string LogoUrl { get; set; }
@@ -24,6 +25,7 @@
 
     public class UpdateShopDto : CreateShopDto {
         public Guid ShopId { get; set; }
+        public bool IsActive { get; set ; }
     }
 
 }

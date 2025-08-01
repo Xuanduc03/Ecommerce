@@ -24,7 +24,11 @@ namespace EcommerceBe.Repositories
         }
         public async Task<List<Shop>> GetAllAsync()
         {
-            return await _context.Shops.Include(s => s.Products).ToListAsync();
+            return await _context.Shops
+                .Include(s => s.Products)
+                .Include(s => s.Seller)
+                    .ThenInclude(u => u.User)
+                .ToListAsync();
         }
         public async Task AddAsync(Shop shop)
         {

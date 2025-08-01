@@ -11,29 +11,31 @@ namespace EcommerceBe.Services
     public class AdminUserService : IAdminUserService
     {
         private readonly IUserRepository _repo;
+        private readonly ISellerRepository _seller;
         private readonly AppDbContext _context;
-        public AdminUserService(IUserRepository repo)
+        public AdminUserService(IUserRepository repo, ISellerRepository sellerRepository)
         {
             _repo = repo;
+            _seller = sellerRepository;
         }
 
 
-        public async Task<bool> CreateUserAsync(RegisterDto user)
+        public async Task<bool> CreateUserAsync(RegisterDto model)
         {
-            var existingUser = await _repo.GetByEmailAsync(user.Email);
+            // 1. Check email trùng
+            if (await _repo.GetByEmailAsync(model.Email) is not null)
+                throw new InvalidOperationException("Email đã được sử dụng.");
 
-            if (existingUser != null)
-            {
-                throw new Exception("nguoi dung da ton tai");
-            }
+            var userId = Guid.NewGuid();
+
             var newUser = new User
             {
-                UserId = new Guid(),
-                Email = user.Email,
-                Username = user.Username,
-                PhoneNumber = user.PhoneNumber,
-                Password = BCrypt.Net.BCrypt.HashPassword(user.Password),
-                Role = UserRole.Client,
+                UserId = userId,
+                Email = model.Email,
+                Username = model.Username,
+                PhoneNumber = model.PhoneNumber,
+                Password = BCrypt.Net.BCrypt.HashPassword(model.Password),
+                Role = model.Role,
                 IsActive = true,
                 CreateAt = DateTime.UtcNow,
             };
@@ -41,6 +43,23 @@ namespace EcommerceBe.Services
             await _repo.AddAsync(newUser);
             await _repo.SaveChangeAsync();
 
+            // 2. Nếu là Seller, tạo Seller record, ShopId = null
+            if (model.Role == UserRole.Seller)
+            {
+                var seller = new Seller
+                {
+                    SellerId = Guid.NewGuid(),
+                    UserId = userId,
+                    Status = "Chờ duyệt",
+                    ShopId = null,
+                    RequestAt = DateTime.UtcNow,
+                    CreateAt = DateTime.UtcNow,
+                    ApprovedAt = null
+                };
+
+                await _seller.AddAsync(seller);
+                await _seller.SaveChangeAsync();
+            }
             return true;
         }
 

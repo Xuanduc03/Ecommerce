@@ -4,7 +4,7 @@
 
   .section-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     margin-bottom: 20px;
     padding: 0 10px;
@@ -24,12 +24,14 @@
 
   .product-container {
     display: grid;
+    max-width: 1200px;
+    margin: 0 auto;
     gap: 16px;
     padding: 0 10px;
 
     // Grid layout - 5 sản phẩm trên 1 hàng
     &.grid {
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(5, 1fr);
     }
 
     // List layout - 1 sản phẩm trên 1 hàng

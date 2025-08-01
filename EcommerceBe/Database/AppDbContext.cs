@@ -12,7 +12,6 @@ namespace EcommerceBe.Database
         public DbSet<ProductVariant> ProductVariants { get; set; }
         public DbSet<Seller> Sellers { get; set; }
         public DbSet<Shop> Shops { get; set; }
-        public DbSet<SellerReport> SellerReports { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<ProductImages> ProductImages { get; set; }
         public DbSet<ProductCategories> ProductCategories { get; set; }
@@ -89,10 +88,6 @@ namespace EcommerceBe.Database
                 .WithMany(p => p.ProductCategories)
                 .HasForeignKey(pc => pc.ProductId);
 
-            modelBuilder.Entity<ProductVariant>() // Bắt đầu từ bên "1"
-               .HasMany(pv => pv.OrderItems) // Một ProductVariant có NHIỀU OrderItem
-               .WithOne(oi => oi.ProductVariant) // Một OrderItem có MỘT ProductVariant
-               .HasForeignKey(oi => oi.ProductVariantId);
 
             modelBuilder.Entity<Cart>()
                .HasMany(c => c.CartItems)
