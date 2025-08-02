@@ -1,4 +1,4 @@
-﻿using EcommerceBe.Database;
+using EcommerceBe.Database;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -81,6 +81,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.Configure<CloudinarySettings>(
     builder.Configuration.GetSection("CloudinarySettings"));
+
+// Add VNPay configuration
+builder.Services.Configure<EcommerceBe.Dto.VNPayConfig>(
+    builder.Configuration.GetSection("VNPay"));
+
+// Add VNPay service
+builder.Services.AddScoped<EcommerceBe.Services.Interfaces.IVNPayService, EcommerceBe.Services.VNPayService>();
 
 builder.Services.AddSingleton<Cloudinary>(provider =>
 {

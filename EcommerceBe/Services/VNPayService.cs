@@ -1,4 +1,4 @@
-﻿using EcommerceBe.Dto;
+using EcommerceBe.Dto;
 using EcommerceBe.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using System.Globalization;
@@ -68,24 +68,39 @@ namespace EcommerceBe.Services
 
         public async Task<PaymentCallbackDto> ProcessCallbackAsync(IQueryCollection queryParams)
         {
-            var callback = new PaymentCallbackDto();
-
-            foreach (var param in queryParams)
+            try
             {
-                var property = typeof(PaymentCallbackDto).GetProperty(param.Key);
-                if (property != null)
-                {
-                    property.SetValue(callback, param.Value.ToString());
-                }
-            }
+                var callback = new PaymentCallbackDto();
 
-            return callback;
+                foreach (var param in queryParams)
+                {
+                    var property = typeof(PaymentCallbackDto).GetProperty(param.Key);
+                    if (property != null && property.CanWrite)
+                    {
+                        property.SetValue(callback, param.Value.ToString());
+                    }
+                }
+
+                _logger.LogInformation($"Processed callback for order {callback.vnp_TxnRef} with response code {callback.vnp_ResponseCode}");
+                return callback;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing callback data");
+                throw;
+            }
         }
 
         public async Task<bool> ValidateCallbackAsync(PaymentCallbackDto callback)
         {
             try
             {
+                if (callback == null)
+                {
+                    _logger.LogError("Callback data is null");
+                    return false;
+                }
+
                 var vnpay = new VnPayLibrary();
 
                 // Add all parameters except vnp_SecureHash
@@ -105,7 +120,20 @@ namespace EcommerceBe.Services
 
                 if (!isValidSignature)
                 {
-                    _logger.LogWarning($"Invalid VNPay signature for transaction {callback.vnp_TxnRef}");
+                    _logger.LogWarning($"Invalid VNPay signature for transaction {callback.vnp_TxnRef}. Expected: {callback.vnp_SecureHash}");
+                    return false;
+                }
+
+                // Check if required fields are present
+                if (string.IsNullOrEmpty(callback.vnp_TxnRef))
+                {
+                    _logger.LogWarning("Missing vnp_TxnRef in callback");
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(callback.vnp_ResponseCode))
+                {
+                    _logger.LogWarning($"Missing vnp_ResponseCode in callback for order {callback.vnp_TxnRef}");
                     return false;
                 }
 
@@ -121,7 +149,7 @@ namespace EcommerceBe.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error validating VNPay callback for order {callback.vnp_TxnRef}");
+                _logger.LogError(ex, $"Error validating VNPay callback for order {callback?.vnp_TxnRef ?? "unknown"}");
                 return false;
             }
         }
@@ -234,8 +262,8 @@ namespace EcommerceBe.Services
             if (x == null) return -1;
             if (y == null) return 1;
 
-            // Đơn giản cho môi trường dev
-            return StringComparer.Ordinal.Compare(x, y);
+            // VNPay yêu cầu sắp xếp theo thứ tự alphabet
+            return string.Compare(x, y, StringComparison.Ordinal);
         }
     }
 
