@@ -10,12 +10,14 @@ import CreateShopForm from "../components/Shop/CreateShopForm";
 import CategoryProduct from "../components/Category/ListProductByCategory";
 import ShopPage from "../pages/ShopPage";
 import { ProfilePage } from "../pages/ProfilePage";
+import ResetPasswordWithToken from "../components/Auth/ResetPassword";
 
 const publicRoute : IRoute[] = [
     {path: "/", component: Home},
     {path: '/product/:id', component: ProductDetailPage},
     {path: '/login', component: Login, layout: null},
     {path: '/forgot-password', component: ForgotPassword, layout: null},
+    {path: '/reset-password', component: ResetPasswordWithToken, layout: null},
     {path: '/signup', component: SignUp, layout: null},
     {path: '/cart', component: CartPage},
     {path: "/shop/:shopId", component: ShopPage},
