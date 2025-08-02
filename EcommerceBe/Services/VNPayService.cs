@@ -158,6 +158,27 @@ namespace EcommerceBe.Services
         {
             return "127.0.0.1"; // In production, get actual client IP
         }
+
+        public string GetResponseCodeMeaning(string responseCode)
+        {
+            return responseCode switch
+            {
+                "00" => "Giao dịch thành công",
+                "01" => "Giao dịch chưa hoàn tất",
+                "02" => "Giao dịch bị lỗi",
+                "04" => "Giao dịch đảo (Khách hàng đã bị trừ tiền tại Ngân hàng nhưng GD chưa thành công ở VNPAY)",
+                "05" => "VNPAY đang xử lý",
+                "06" => "VNPAY đã gửi yêu cầu hoàn tiền sang Ngân hàng",
+                "07" => "Giao dịch bị nghi ngờ gian lận",
+                "09" => "Giao dịch không thành công do: Thẻ/Tài khoản bị khóa",
+                "13" => "Giao dịch không thành công do Quý khách nhập sai mật khẩu xác thực giao dịch (OTP). Xin quý khách vui lòng thực hiện lại giao dịch.",
+                "65" => "Giao dịch không thành công do tài khoản của Quý khách đã vượt quá hạn mức giao dịch trong ngày.",
+                "75" => "Ngân hàng thanh toán đang bảo trì.",
+                "79" => "Giao dịch không thành công do Quý khách nhập sai mật khẩu thanh toán quốc tế. Xin quý khách vui lòng thực hiện lại giao dịch.",
+                "99" => "Các lỗi khác (lỗi còn lại, không có trong danh sách mã lỗi đã liệt kê)",
+                _ => $"Mã lỗi không xác định: {responseCode}"
+            };
+        }
     }
 
     // 4. VNPay Library Helper Class

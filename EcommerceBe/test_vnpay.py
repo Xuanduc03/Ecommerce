@@ -129,6 +129,31 @@ def test_ipn():
     except requests.exceptions.RequestException as e:
         print(f"❌ Request error: {e}")
 
+def test_response_code_meaning():
+    """Test response code meaning endpoint"""
+    print("\n=== Testing Response Code Meaning ===")
+    
+    test_codes = ["00", "01", "02", "04", "05", "06", "07", "09", "13", "65", "75", "79", "99", "invalid"]
+    
+    for code in test_codes:
+        try:
+            response = requests.get(
+                f"{API_BASE}/response-code/{code}",
+                verify=False
+            )
+            
+            print(f"Response Code {code}:")
+            print(f"  Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"  Meaning: {data.get('meaning')}")
+            else:
+                print(f"  Error: {response.text}")
+                
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Request error for code {code}: {e}")
+
 def main():
     """Main test function"""
     print("VNPay Integration Test")
@@ -138,6 +163,7 @@ def main():
     test_create_payment()
     test_callback()
     test_ipn()
+    test_response_code_meaning()
     
     print("\n" + "=" * 50)
     print("Test completed!")

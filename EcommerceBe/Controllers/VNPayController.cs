@@ -1,4 +1,4 @@
-﻿using EcommerceBe.Dto;
+using EcommerceBe.Dto;
 using EcommerceBe.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -105,8 +105,24 @@ namespace EcommerceBe.Controllers
         {
             try
             {
+                _logger.LogInformation("Payment callback received with query params: " + string.Join(", ", Request.Query.Select(q => $"{q.Key}={q.Value}")));
+
+                if (!Request.Query.Any())
+                {
+                    _logger.LogWarning("No query parameters received in callback");
+                    return Redirect("https://your-frontend-domain.com/payment-callback?error=no_params");
+                }
+
                 var callback = await _vnPayService.ProcessCallbackAsync(Request.Query);
+                
+                if (callback == null)
+                {
+                    _logger.LogError("Failed to process callback data");
+                    return Redirect("https://your-frontend-domain.com/payment-callback?error=processing_failed");
+                }
+
                 var isValid = await _vnPayService.ValidateCallbackAsync(callback);
+                var responseCodeMeaning = _vnPayService.GetResponseCodeMeaning(callback.vnp_ResponseCode);
 
                 if (isValid && callback.vnp_ResponseCode == "00")
                 {
@@ -118,21 +134,21 @@ namespace EcommerceBe.Controllers
                     // await _orderService.UpdateOrderStatusAsync(callback.vnp_TxnRef, "paid");
 
                     // Redirect to frontend success page with query params
-                    return Redirect($"https://your-frontend-domain.com/payment-callback?vnp_ResponseCode={callback.vnp_ResponseCode}&vnp_TxnRef={callback.vnp_TxnRef}&vnp_TransactionStatus={callback.vnp_TransactionStatus}");
+                    return Redirect($"https://your-frontend-domain.com/payment-callback?vnp_ResponseCode={callback.vnp_ResponseCode}&vnp_TxnRef={callback.vnp_TxnRef}&vnp_TransactionStatus={callback.vnp_TransactionStatus}&status=success&message={Uri.EscapeDataString(responseCodeMeaning)}");
                 }
                 else
                 {
                     // Payment failed
-                    _logger.LogWarning($"Payment failed for order {callback.vnp_TxnRef}, Response Code: {callback.vnp_ResponseCode}");
+                    _logger.LogWarning($"Payment failed for order {callback.vnp_TxnRef}, Response Code: {callback.vnp_ResponseCode}, Meaning: {responseCodeMeaning}, Valid: {isValid}");
 
                     // Redirect to frontend failure page
-                    return Redirect($"https://your-frontend-domain.com/payment-callback?vnp_ResponseCode={callback.vnp_ResponseCode}&vnp_TxnRef={callback.vnp_TxnRef}&vnp_TransactionStatus={callback.vnp_TransactionStatus}");
+                    return Redirect($"https://your-frontend-domain.com/payment-callback?vnp_ResponseCode={callback.vnp_ResponseCode}&vnp_TxnRef={callback.vnp_TxnRef}&vnp_TransactionStatus={callback.vnp_TransactionStatus}&status=failed&valid={isValid}&message={Uri.EscapeDataString(responseCodeMeaning)}");
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing payment callback");
-                return Redirect("https://your-frontend-domain.com/payment-callback?error=true");
+                return Redirect("https://your-frontend-domain.com/payment-callback?error=exception&message=" + Uri.EscapeDataString(ex.Message));
             }
         }
 
@@ -141,8 +157,24 @@ namespace EcommerceBe.Controllers
         {
             try
             {
+                _logger.LogInformation("IPN received with query params: " + string.Join(", ", Request.Query.Select(q => $"{q.Key}={q.Value}")));
+
+                if (!Request.Query.Any())
+                {
+                    _logger.LogWarning("No query parameters received in IPN");
+                    return Ok(new { RspCode = "99", Message = "No parameters" });
+                }
+
                 var callback = await _vnPayService.ProcessCallbackAsync(Request.Query);
+                
+                if (callback == null)
+                {
+                    _logger.LogError("Failed to process IPN data");
+                    return Ok(new { RspCode = "99", Message = "Processing failed" });
+                }
+
                 var isValid = await _vnPayService.ValidateCallbackAsync(callback);
+                var responseCodeMeaning = _vnPayService.GetResponseCodeMeaning(callback.vnp_ResponseCode);
 
                 if (isValid)
                 {
@@ -160,7 +192,7 @@ namespace EcommerceBe.Controllers
                     else
                     {
                         // Payment failed but signature is valid
-                        _logger.LogWarning($"IPN: Payment failed for order {callback.vnp_TxnRef}");
+                        _logger.LogWarning($"IPN: Payment failed for order {callback.vnp_TxnRef}, ResponseCode: {callback.vnp_ResponseCode}, Meaning: {responseCodeMeaning}, TransactionStatus: {callback.vnp_TransactionStatus}");
                         return Ok(new { RspCode = "00", Message = "success" });
                     }
                 }
@@ -175,6 +207,24 @@ namespace EcommerceBe.Controllers
             {
                 _logger.LogError(ex, "Error processing IPN");
                 return Ok(new { RspCode = "99", Message = "Unknown error" });
+            }
+        }
+
+        [HttpGet("response-code/{responseCode}")]
+        public IActionResult GetResponseCodeMeaning(string responseCode)
+        {
+            try
+            {
+                var meaning = _vnPayService.GetResponseCodeMeaning(responseCode);
+                return Ok(new { 
+                    ResponseCode = responseCode, 
+                    Meaning = meaning 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting response code meaning");
+                return StatusCode(500, new { message = "Internal server error" });
             }
         }
     }
