@@ -1,0 +1,29 @@
+### Test VNPay Payment Flow
+
+### 1. Create Payment
+POST {{host}}/api/payment/create-payment-direct
+Content-Type: application/json
+
+{
+  "orderId": "TEST001",
+  "amount": 100000,
+  "orderInfo": "Thanh toan don hang TEST001",
+  "customerName": "Nguyen Van A",
+  "customerEmail": "test@example.com",
+  "customerPhone": "0123456789"
+}
+
+### 2. Test Callback (Success) - GET request
+GET {{host}}/api/payment/callback?vnp_Amount=10000000&vnp_BankCode=NCB&vnp_BankTranNo=VNP01&vnp_CardType=ATM&vnp_OrderInfo=Thanh+toan+don+hang+TEST001&vnp_PayDate=20231201120000&vnp_ResponseCode=00&vnp_TmnCode=2QXUI4J4&vnp_TransactionNo=14200000&vnp_TransactionStatus=00&vnp_TxnRef=TEST001&vnp_SecureHash=test_hash
+
+### 3. Test Callback (Failed) - GET request
+GET {{host}}/api/payment/callback?vnp_Amount=10000000&vnp_BankCode=NCB&vnp_BankTranNo=VNP01&vnp_CardType=ATM&vnp_OrderInfo=Thanh+toan+don+hang+TEST001&vnp_PayDate=20231201120000&vnp_ResponseCode=24&vnp_TmnCode=2QXUI4J4&vnp_TransactionNo=14200000&vnp_TransactionStatus=02&vnp_TxnRef=TEST001&vnp_SecureHash=test_hash
+
+### 4. Test IPN (Success) - POST request
+POST {{host}}/api/payment/ipn
+Content-Type: application/x-www-form-urlencoded
+
+vnp_Amount=10000000&vnp_BankCode=NCB&vnp_BankTranNo=VNP01&vnp_CardType=ATM&vnp_OrderInfo=Thanh+toan+don+hang+TEST001&vnp_PayDate=20231201120000&vnp_ResponseCode=00&vnp_TmnCode=2QXUI4J4&vnp_TransactionNo=14200000&vnp_TransactionStatus=00&vnp_TxnRef=TEST001&vnp_SecureHash=test_hash
+
+### Variables
+@host = https://localhost:7040
