@@ -103,39 +103,58 @@ const OrderSellerManager: React.FC = () => {
     fetchShopForSeller();
   }, [token]);
 
-  const fetchOrder = async (shopId: string) => {
+  const fetchSellerOrders = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`https://localhost:7040/api/order/shop/${shopId}`, {
+      const res = await axios.get("https://localhost:7040/api/seller/orders", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const rawOrders = res.data || [];
 
-      const transformedOrders = rawOrders.map((order: any) => {
-        const parts = order.shippingAddress.split(',').map((p: string) => p.trim());
-
-        return {
-          ...order,
-          customerName: parts[0] || '',
-          customerPhone: parts[1] || '',
-          customerAddress: parts.slice(2).join(', ') || ''
-        };
-      });
+      const transformedOrders = rawOrders.map((order: any) => ({
+        id: order.orderId,
+        orderCode: order.orderId.substring(0, 8),
+        createdAt: order.orderDate,
+        productName: order.items?.[0]?.productName || 'N/A',
+        quantity: order.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0,
+        totalPrice: order.totalAmount,
+        status: order.status,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerAddress: order.shippingAddress,
+        products: order.items || [],
+        shippingChannel: 'standard'
+      }));
 
       setOrders(transformedOrders);
 
-    } catch {
-      message.error("Không thể tải sản phẩm cho shop!");
+    } catch (error) {
+      console.error("Error fetching seller orders:", error);
+      message.error("Không thể tải đơn hàng!");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (shopId) {
-      fetchOrder(shopId);
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      await axios.put(`https://localhost:7040/api/seller/orders/${orderId}/status`, {
+        status: newStatus
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      message.success("Cập nhật trạng thái đơn hàng thành công!");
+      fetchSellerOrders(); // Refresh orders
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      message.error("Không thể cập nhật trạng thái đơn hàng!");
     }
-  }, [shopId]);
+  };
+
+  useEffect(() => {
+    fetchSellerOrders();
+  }, [token]);
 
   // Status mapping
   const statusMap = {
@@ -248,11 +267,21 @@ const OrderSellerManager: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       width: 120,
+      render: (status: string) => {
+        const colorMap: { [key: string]: string } = {
+          pending: 'warning',
+          confirmed: 'processing',
+          shipping: 'blue',
+          delivered: 'success',
+          cancelled: 'error'
+        };
+        return <Tag color={colorMap[status] || 'default'}>{statusMap[status as keyof typeof statusMap] || status}</Tag>;
+      }
     },
     {
       title: 'Hành động',
       key: 'actions',
-      width: 200,
+      width: 300,
       render: (record: Order) => (
         <Space>
           <Button
@@ -264,15 +293,33 @@ const OrderSellerManager: React.FC = () => {
           >
             Xem chi tiết
           </Button>
-          <Button
-            type="primary"
-            size="small"
-            icon={<CarOutlined />}
-            onClick={() => handleArrangeShipping(record)}
-            disabled={record.status === 'completed' || record.status === 'cancelled'}
-          >
-            Sắp xếp giao hàng
-          </Button>
+          {record.status === 'shipping' && (
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => updateOrderStatus(record.id, 'delivered')}
+            >
+              Đánh dấu đã giao
+            </Button>
+          )}
+          {record.status === 'pending' && (
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => updateOrderStatus(record.id, 'confirmed')}
+            >
+              Xác nhận đơn
+            </Button>
+          )}
+          {record.status === 'confirmed' && (
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => updateOrderStatus(record.id, 'shipping')}
+            >
+              Giao hàng
+            </Button>
+          )}
         </Space>
       )
     }

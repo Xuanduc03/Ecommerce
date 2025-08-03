@@ -1,4 +1,4 @@
-﻿using EcommerceBe.Dto;
+using EcommerceBe.Dto;
 using EcommerceBe.Models;
 using EcommerceBe.Repositories.Interfaces;
 using EcommerceBe.Services.Interfaces;
@@ -158,6 +158,57 @@ namespace EcommerceBe.Services
                 Status = o.Status,
                 TotalAmount = o.TotalAmount,
                 UserName = o.ShippingAddress?.user?.FullName ?? "",
+                Items = o.OrderItems.Select(oi => new ReponseOrderItemDto
+                {
+                    ProductId = oi.ProductId,
+                    ProductName = oi.product?.ProductName ?? "",
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            };
+        }
+
+        public async Task<List<SellerOrderDto>> GetSellerOrdersAsync(Guid sellerId)
+        {
+            var orders = await _orderRepository.GetOrdersBySellerIdAsync(sellerId);
+            return orders.Select(MapToSellerOrderDto).ToList();
+        }
+
+        public async Task UpdateSellerOrderStatusAsync(Guid orderId, string status, Guid sellerId)
+        {
+            var order = await _orderRepository.GetByIdAsync(orderId);
+            if (order == null)
+                throw new Exception("Order not found");
+
+            // Verify order belongs to seller
+            var belongsToSeller = await CheckOrderBelongsToSellerAsync(orderId, sellerId);
+            if (!belongsToSeller)
+                throw new UnauthorizedAccessException("Order does not belong to this seller");
+
+            await UpdateOrderStatusAsync(orderId, status);
+        }
+
+        public async Task<bool> CheckOrderBelongsToSellerAsync(Guid orderId, Guid sellerId)
+        {
+            var order = await _orderRepository.GetByIdAsync(orderId);
+            if (order == null) return false;
+
+            var shop = await _orderRepository.GetShopBySellerIdAsync(sellerId);
+            return shop != null && order.ShopId == shop.ShopId;
+        }
+
+        private static SellerOrderDto MapToSellerOrderDto(Order o)
+        {
+            return new SellerOrderDto
+            {
+                OrderId = o.OrderId,
+                OrderDate = o.OrderDate,
+                CustomerName = o.ShippingAddress?.FullName ?? "",
+                CustomerPhone = o.ShippingAddress?.PhoneNumber ?? "",
+                ShippingAddress = FormatAddress(o.ShippingAddress),
+                PaymentMethod = o.PaymentMethod,
+                Status = o.Status,
+                TotalAmount = o.TotalAmount,
                 Items = o.OrderItems.Select(oi => new ReponseOrderItemDto
                 {
                     ProductId = oi.ProductId,
