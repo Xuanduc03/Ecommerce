@@ -85,17 +85,21 @@ const OrderSellerManager: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const seller = sellerRes.data;
+      console.log("Seller info:", seller);
       if (!seller?.sellerId) return message.error("Không tìm thấy thông tin seller!");
 
-      const shopRes = await axios.get(`https://localhost:7040/api/shop/seller/${seller.sellerId}`, {
+      // Sử dụng API mới để lấy thông tin shop
+      const shopRes = await axios.get("https://localhost:7040/api/seller/shop", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const shop = shopRes.data;
+      console.log("Shop info:", shop);
       if (!shop?.shopId) return message.error("Seller chưa có cửa hàng!");
 
       setShopId(shop.shopId);
       console.log("shop", shop.shopId);
-    } catch {
+    } catch (error) {
+      console.error("Error fetching shop info:", error);
       message.error("Không thể tải thông tin Shop cho seller!");
     }
   };
@@ -106,9 +110,11 @@ const OrderSellerManager: React.FC = () => {
   const fetchSellerOrders = async () => {
     try {
       setLoading(true);
+      console.log("Fetching seller orders...");
       const res = await axios.get("https://localhost:7040/api/seller/orders", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log("Raw orders response:", res.data);
       const rawOrders = res.data || [];
 
       const transformedOrders = rawOrders.map((order: any) => ({
@@ -127,6 +133,7 @@ const OrderSellerManager: React.FC = () => {
       }));
 
       setOrders(transformedOrders);
+      console.log("Fetched orders:", transformedOrders);
 
     } catch (error) {
       console.error("Error fetching seller orders:", error);
@@ -138,6 +145,7 @@ const OrderSellerManager: React.FC = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      console.log("Updating order status:", orderId, newStatus);
       await axios.put(`https://localhost:7040/api/seller/orders/${orderId}/status`, {
         status: newStatus
       }, {

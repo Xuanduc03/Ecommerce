@@ -30,9 +30,14 @@ interface Order {
   totalAmount: number;
   paymentMethod: string;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  shippingAddress?: string;
   user?: {
     username: string;
     email?: string;
+  };
+  shop?: {
+    shopId: string;
+    shopName: string;
   };
   orderItems?: {
     productName: string;
@@ -138,6 +143,21 @@ const OrderManager: React.FC = () => {
       render: (username) => username || "Ẩn danh",
     },
     {
+      title: "Shop",
+      dataIndex: ["shop", "shopName"],
+      render: (shopName, record) => shopName || `Shop ${record.shopId?.slice(0, 8)}`,
+    },
+    {
+      title: "Sản phẩm",
+      dataIndex: "orderItems",
+      render: (items) => {
+        if (!items || items.length === 0) return "Không có sản phẩm";
+        const firstItem = items[0];
+        const totalItems = items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+        return `${firstItem.productName} +${items.length - 1} sản phẩm khác (${totalItems} sp)`;
+      },
+    },
+    {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
       render: (val) =>
@@ -146,7 +166,7 @@ const OrderManager: React.FC = () => {
     {
       title: "Thanh toán",
       dataIndex: "paymentMethod",
-      render: (method) => <Tag color="blue">{method.toUpperCase()}</Tag>,
+      render: (method) => <Tag color="blue">{method?.toUpperCase() || "N/A"}</Tag>,
     },
     {
       title: "Trạng thái",
@@ -173,6 +193,14 @@ const OrderManager: React.FC = () => {
       title: "Ngày đặt",
       dataIndex: "orderDate",
       render: (date) => new Date(date).toLocaleDateString("vi-VN"),
+    },
+    {
+      title: "Địa chỉ giao hàng",
+      dataIndex: "shippingAddress",
+      render: (address) => {
+        if (!address) return "Không có địa chỉ";
+        return address.length > 50 ? `${address.substring(0, 50)}...` : address;
+      },
     },
     {
       title: "Hành động",
@@ -277,29 +305,62 @@ const OrderManager: React.FC = () => {
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={600}
+        width={800}
       >
-        {selectedOrder?.orderItems?.length ? (
-          <Table
-            rowKey={(item) => item.productName + item.quantity}
-            dataSource={selectedOrder.orderItems}
-            pagination={false}
-            columns={[
-              { title: "Sản phẩm", dataIndex: "productName" },
-              { title: "Số lượng", dataIndex: "quantity", align: "center" },
-              {
-                title: "Giá",
-                dataIndex: "price",
-                render: (val) =>
-                  val.toLocaleString("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }),
-              },
-            ]}
-          />
-        ) : (
-          <p>Không có sản phẩm nào trong đơn</p>
+        {selectedOrder && (
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <h4>Thông tin đơn hàng</h4>
+              <p><strong>Mã đơn hàng:</strong> {selectedOrder.orderId}</p>
+              <p><strong>Ngày đặt:</strong> {new Date(selectedOrder.orderDate).toLocaleString('vi-VN')}</p>
+              <p><strong>Trạng thái:</strong> {selectedOrder.status}</p>
+              <p><strong>Phương thức thanh toán:</strong> {selectedOrder.paymentMethod}</p>
+              <p><strong>Tổng tiền:</strong> {selectedOrder.totalAmount.toLocaleString('vi-VN')} ₫</p>
+              {selectedOrder.shop && (
+                <p><strong>Shop:</strong> {selectedOrder.shop.shopName}</p>
+              )}
+              {selectedOrder.user && (
+                <p><strong>Khách hàng:</strong> {selectedOrder.user.username}</p>
+              )}
+              {selectedOrder.shippingAddress && (
+                <p><strong>Địa chỉ giao hàng:</strong> {selectedOrder.shippingAddress}</p>
+              )}
+            </div>
+            
+            <div>
+              <h4>Danh sách sản phẩm</h4>
+              {selectedOrder.orderItems?.length ? (
+                <Table
+                  rowKey={(item) => item.productName + item.quantity}
+                  dataSource={selectedOrder.orderItems}
+                  pagination={false}
+                  columns={[
+                    { title: "Sản phẩm", dataIndex: "productName" },
+                    { title: "Số lượng", dataIndex: "quantity", align: "center" },
+                    {
+                      title: "Giá",
+                      dataIndex: "price",
+                      render: (val) =>
+                        val.toLocaleString("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }),
+                    },
+                    {
+                      title: "Thành tiền",
+                      render: (_, record) =>
+                        (record.price * record.quantity).toLocaleString("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }),
+                    },
+                  ]}
+                />
+              ) : (
+                <p>Không có sản phẩm nào trong đơn</p>
+              )}
+            </div>
+          </div>
         )}
       </Modal>
     </Card>
