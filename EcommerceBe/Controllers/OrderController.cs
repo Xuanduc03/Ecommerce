@@ -1,4 +1,4 @@
-﻿using EcommerceBe.Dto;
+using EcommerceBe.Dto;
 using EcommerceBe.Models;
 using EcommerceBe.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -53,6 +53,21 @@ namespace EcommerceBe.Controllers
             var userId = GetCurrentUserId();
             var orders = await _orderService.GetOrdersByUserIdAsync(userId);
             return Ok(orders);
+        }
+
+        [HttpDelete("user/{orderId}")]
+        public async Task<IActionResult> CancelUserOrder(Guid orderId)
+        {
+            var userId = GetCurrentUserId();
+            var isOwner = await _orderService.CheckOrderBelongsToUserAsync(orderId, userId);
+            if (!isOwner) return Forbid();
+
+            var order = await _orderService.GetOrderByIdAsync(orderId);
+            if (order.Status != "Pending" && order.Status != "Processing")
+                return BadRequest(new { error = "Chỉ có thể huỷ đơn hàng đang chờ xử lý" });
+
+            await _orderService.CancelOrderAsync(orderId, "User cancelled");
+            return Ok(new { message = "Order cancelled successfully" });
         }
 
         [HttpPut("{orderId}/cancel")]
@@ -115,6 +130,28 @@ namespace EcommerceBe.Controllers
         {
             await _orderService.UpdateOrderStatusAsync(orderId, status);
             return Ok(new { message = "Order status updated by admin" });
+        }
+
+        // === Seller ===
+        [HttpGet("seller")]
+        [Authorize(Roles = "Seller")]
+        public async Task<IActionResult> GetSellerOrders()
+        {
+            var userId = GetCurrentUserId();
+            var orders = await _orderService.GetOrdersBySellerIdAsync(userId);
+            return Ok(orders);
+        }
+
+        [HttpPut("seller/{orderId}/status")]
+        [Authorize(Roles = "Seller")]
+        public async Task<IActionResult> SellerUpdateOrderStatus(Guid orderId, [FromQuery] string status)
+        {
+            var userId = GetCurrentUserId();
+            var isOwner = await _orderService.CheckOrderBelongsToSellerAsync(orderId, userId);
+            if (!isOwner) return Forbid();
+
+            await _orderService.UpdateOrderStatusAsync(orderId, status);
+            return Ok(new { message = "Order status updated by seller" });
         }
     }
 }
