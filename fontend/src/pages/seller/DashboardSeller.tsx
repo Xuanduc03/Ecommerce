@@ -62,6 +62,7 @@ const DashboardSeller: React.FC = () => {
       const response = await axios.get(`https://localhost:7040/api/statistics/seller/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log("Statistics response:", response.data);
       setStatistics(response.data);
     } catch (error) {
       console.error("Error fetching seller statistics:", error);

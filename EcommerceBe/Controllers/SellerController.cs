@@ -1,4 +1,4 @@
-﻿using CloudinaryDotNet.Actions;
+using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using EcommerceBe.Models;
 using EcommerceBe.Repositories.Interfaces;
@@ -39,6 +39,7 @@ namespace EcommerceBe.Controllers
             {
                 seller.SellerId,
                 seller.Shop?.ShopId,
+                seller.Shop?.ShopName,
                 User = new { seller.User.UserId, seller.User.Email }
             };
 
@@ -55,6 +56,26 @@ namespace EcommerceBe.Controllers
                 return BadRequest(new { message = "SellerId không hợp lệ." });
 
             var shop = await _shopRepository.GetBySellerIdAsync(sellerGuid);
+
+            if (shop == null)
+                return NotFound(new { message = "Seller chưa có shop." });
+
+            return Ok(shop);
+        }
+
+        [HttpGet("shop")]
+        [Authorize(Roles = "Seller")]
+        public async Task<IActionResult> GetCurrentSellerShop()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+
+            Guid.TryParse(userIdClaim, out var userId);
+            var seller = await _sellerRepository.GetByUserIdAsync(userId);
+
+            if (seller == null) return NotFound();
+
+            var shop = await _shopRepository.GetBySellerIdAsync(seller.SellerId);
 
             if (shop == null)
                 return NotFound(new { message = "Seller chưa có shop." });
