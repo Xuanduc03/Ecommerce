@@ -1,4 +1,4 @@
-﻿namespace EcommerceBe.Dto
+namespace EcommerceBe.Dto
 {
     public class OrderCreateDto
     {
@@ -27,6 +27,11 @@
         public string Status { get; set; }
         public decimal TotalAmount { get; set; }
         public decimal? ShippingFee { get; set; }
+        
+        // Thông tin người nhận chi tiết
+        public string RecipientName { get; set; }
+        public string RecipientPhone { get; set; }
+        public string RecipientAddress { get; set; }
 
         public List<OrderItemDto> Items { get; set; }
     }
@@ -44,6 +49,12 @@
         public decimal TotalAmount { get; set; }
         public decimal? ShippingFee { get; set; }
         public string UserName { get; set; }
+        
+        // Thông tin người nhận chi tiết
+        public string RecipientName { get; set; }
+        public string RecipientPhone { get; set; }
+        public string RecipientAddress { get; set; }
+        
         public List<ReponseOrderItemDto> Items { get; set; } = new();
     }
 

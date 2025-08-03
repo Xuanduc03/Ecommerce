@@ -1,4 +1,4 @@
-﻿using EcommerceBe.Dto;
+using EcommerceBe.Dto;
 using EcommerceBe.Models;
 
 namespace EcommerceBe.Services.Interfaces
@@ -14,5 +14,7 @@ namespace EcommerceBe.Services.Interfaces
         Task UpdateOrderStatusAsync(Guid orderId, string status);
         Task CancelOrderAsync(Guid orderId, string reason);
         Task<bool> CheckOrderBelongsToUserAsync(Guid orderId, Guid userId);
+        Task<List<ReponseOrderAllDto>> GetOrdersBySellerIdAsync(Guid sellerId);
+        Task<bool> CheckOrderBelongsToSellerAsync(Guid orderId, Guid sellerId);
     }
 }

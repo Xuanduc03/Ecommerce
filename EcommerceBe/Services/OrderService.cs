@@ -1,4 +1,4 @@
-﻿using EcommerceBe.Dto;
+using EcommerceBe.Dto;
 using EcommerceBe.Models;
 using EcommerceBe.Repositories.Interfaces;
 using EcommerceBe.Services.Interfaces;
@@ -94,6 +94,9 @@ namespace EcommerceBe.Services
                 PaymentMethod = order.PaymentMethod,
                 Status = order.Status,
                 TotalAmount = order.TotalAmount,
+                RecipientName = order.ShippingAddress?.FullName ?? "",
+                RecipientPhone = order.ShippingAddress?.PhoneNumber ?? "",
+                RecipientAddress = FormatAddress(order.ShippingAddress),
                 Items = order.OrderItems.Select(oi => new OrderItemDto
                 {
                     ProductId = oi.ProductId,
@@ -145,6 +148,17 @@ namespace EcommerceBe.Services
             return await _orderRepository.CheckOrderBelongsToUserAsync(orderId, userId);
         }
 
+        public async Task<List<ReponseOrderAllDto>> GetOrdersBySellerIdAsync(Guid sellerId)
+        {
+            var orders = await _orderRepository.GetOrdersBySellerIdAsync(sellerId);
+            return orders.Select(MapToResponseDto).ToList();
+        }
+
+        public async Task<bool> CheckOrderBelongsToSellerAsync(Guid orderId, Guid sellerId)
+        {
+            return await _orderRepository.CheckOrderBelongsToSellerAsync(orderId, sellerId);
+        }
+
         // ========== Helper ==========
 
         private static ReponseOrderAllDto MapToResponseDto(Order o)
@@ -158,6 +172,9 @@ namespace EcommerceBe.Services
                 Status = o.Status,
                 TotalAmount = o.TotalAmount,
                 UserName = o.ShippingAddress?.user?.FullName ?? "",
+                RecipientName = o.ShippingAddress?.FullName ?? "",
+                RecipientPhone = o.ShippingAddress?.PhoneNumber ?? "",
+                RecipientAddress = FormatAddress(o.ShippingAddress),
                 Items = o.OrderItems.Select(oi => new ReponseOrderItemDto
                 {
                     ProductId = oi.ProductId,
