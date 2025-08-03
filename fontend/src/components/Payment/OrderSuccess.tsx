@@ -89,6 +89,17 @@ const OrderSuccess: React.FC = () => {
           )}
         </div>
 
+        {/* Thông tin giao hàng */}
+        {orderDetails && orderDetails.shippingAddress && (
+          <div className="shipping-info">
+            <h3>Thông tin giao hàng</h3>
+            <div className="info-item">
+              <span>Người nhận:</span>
+              <strong>{orderDetails.shippingAddress}</strong>
+            </div>
+          </div>
+        )}
+
         {/* Hiển thị thông tin chuyển khoản nếu là banking */}
         {state.paymentMethod === 'banking' && state.bankInfo && (
           <div className="banking-info">

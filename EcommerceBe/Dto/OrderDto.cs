@@ -1,4 +1,4 @@
-﻿namespace EcommerceBe.Dto
+namespace EcommerceBe.Dto
 {
     public class OrderCreateDto
     {
@@ -164,6 +164,25 @@
     {
         public string Reason { get; set; }
     }
+
+    public class SellerOrderDto
+    {
+        public Guid OrderId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public string ShippingAddress { get; set; }
+        public string PaymentMethod { get; set; }
+        public string Status { get; set; }
+        public decimal TotalAmount { get; set; }
+        public List<ReponseOrderItemDto> Items { get; set; } = new();
+    }
+
+    public class UpdateOrderStatusDto
+    {
+        public string Status { get; set; }
+    }
+
     public enum OrderStatus
     {
         Pending,        // Chờ xác nhận
