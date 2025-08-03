@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./CartItem.scss";
 import { useDispatch } from "react-redux";
-import { removeItemLocally } from "../../../redux/cartSlice";
+import { removeItemLocally, updateItemQuantity } from "../../../redux/cartSlice";
 
 export interface CartItemProps {
   item: {
@@ -65,7 +65,41 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemoveItem, onSaveForLater 
             </p>
           )}
 
-          <p className="quantity">Số lượng: x{item.quantity}</p>
+          <p className="quantity-control">
+            Số lượng:
+            <button
+              onClick={() =>
+                dispatch(
+                  updateItemQuantity({
+                    id: item.productId,
+                    color: item.color,
+                    size: item.size,
+                    quantity: item.quantity - 1,
+                  })
+                )
+              }
+              disabled={item.quantity <= 1}
+            >
+              -
+            </button>
+
+            <span>{item.quantity}</span>
+
+            <button
+              onClick={() =>
+                dispatch(
+                  updateItemQuantity({
+                    id: item.productId,
+                    color: item.color,
+                    size: item.size,
+                    quantity: item.quantity + 1,
+                  })
+                )
+              }
+            >
+              +
+            </button>
+          </p>
 
           <div className="price-section">
             <span className="current-price">
@@ -83,9 +117,6 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemoveItem, onSaveForLater 
       </div>
 
       <div className="item-actions">
-        <button className="save-btn" onClick={() => onSaveForLater(item.productId)}>
-          Lưu để mua sau
-        </button>
         <button className="remove-btn" onClick={handleRemove}>
           Xóa
         </button>

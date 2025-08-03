@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "./ResetPassword.scss";
+import { useNavigate } from "react-router-dom";
 
 const ResetPasswordFlow = () => {
   const [token, setToken] = useState("");
@@ -8,7 +9,7 @@ const ResetPasswordFlow = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-
+  const  navigate = useNavigate();
   const handleResetPassword = async () => {
     if (!token || !newPassword || !confirmPassword) {
       setMessage("Vui lòng nhập đầy đủ thông tin.");
@@ -30,9 +31,7 @@ const ResetPasswordFlow = () => {
       });
 
       setMessage("✅ Đặt lại mật khẩu thành công. Hãy đăng nhập lại.");
-      setToken("");
-      setNewPassword("");
-      setConfirmPassword("");
+      navigate("/login");
     } catch (err: any) {
       setMessage(err.response?.data?.message || "❌ Lỗi khi đặt lại mật khẩu. Vui lòng thử lại.");
     } finally {

@@ -54,7 +54,7 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 3rem 2rem;
     text-align: center;
     position: relative;
-    
+
     &::before {
       content: '';
       position: absolute;
@@ -131,7 +131,7 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         background: white;
         transition: $transition;
         color: #1f2937;
-        
+
         @include input-focus;
 
         &::placeholder {
@@ -218,7 +218,7 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           appearance: none;
           color: #1f2937;
           transition: $transition;
-          
+
           @include input-focus;
 
           &:hover {
@@ -233,11 +233,11 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           transform: translateY(-50%);
           pointer-events: none;
           color: $secondary-color;
-          
+
           &:nth-of-type(2) {
             right: calc(66.666% + 0.5rem);
           }
-          
+
           &:nth-of-type(3) {
             right: calc(33.333% + 0.25rem);
           }
@@ -245,7 +245,7 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
         @media (max-width: 480px) {
           grid-template-columns: 1fr;
-          
+
           .select-icon {
             position: relative;
             right: auto;
@@ -276,6 +276,7 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         &:first-child {
+
           // Đây là ô "Tên" (lastName)
           label {
             visibility: visible;
@@ -283,6 +284,7 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         &:last-child {
+
           // Đây là ô "firstName" - ẩn label để căn hàng
           label {
             visibility: hidden;
@@ -301,6 +303,7 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       margin-top: 2rem;
 
       .save-btn {
+        margin-left: 10px;
         background: linear-gradient(135deg, $success-color 0%, #047857 100%);
         color: white;
         border: none;
@@ -317,6 +320,29 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           transform: translateY(-2px);
           box-shadow: $shadow-lg;
           background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+
+      .cancel-btn {
+        background: #f3f4f6;
+        color: #1f2937;
+        border: none;
+        padding: 1.25rem 3rem;
+        border-radius: $border-radius;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: $transition;
+        box-shadow: $shadow-sm;
+
+        &:hover {
+           transform: translateY(-2px);
+          box-shadow: $shadow-lg;
+          background: linear-gradient(135deg, #da4b39 0%, #ff520e 100%);
         }
 
         &:active {
@@ -408,7 +434,6 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   // Responsive improvements
   @media (max-width: 640px) {
-    padding: 1rem 0.5rem;
 
     .main-content {
       border-radius: 16px;
@@ -446,6 +471,7 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       opacity: 0;
       transform: translateX(-30px);
     }
+
     100% {
       opacity: 1;
       transform: translateX(0);
@@ -491,4 +517,6 @@ $transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       left: 100%;
     }
   }
+
+
 }

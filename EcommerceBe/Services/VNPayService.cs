@@ -12,11 +12,13 @@ namespace EcommerceBe.Services
     {
         private readonly VNPayConfig _config;
         private readonly ILogger<VNPayService> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public VNPayService(IOptions<VNPayConfig> config, ILogger<VNPayService> logger)
+        public VNPayService(IOptions<VNPayConfig> config, ILogger<VNPayService> logger, IHttpContextAccessor httpContextAccessor)
         {
             _config = config.Value;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<PaymentResponseDto> CreatePaymentAsync(PaymentRequestDto request)
@@ -25,10 +27,10 @@ namespace EcommerceBe.Services
             {
                 var timeZoneById = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
                 var timeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneById);
-                var tick = DateTime.Now.Ticks.ToString();
 
                 var vnpay = new VnPayLibrary();
 
+                // Add parameters in correct order and format
                 vnpay.AddRequestData("vnp_Version", _config.Version);
                 vnpay.AddRequestData("vnp_Command", _config.Command);
                 vnpay.AddRequestData("vnp_TmnCode", _config.TmnCode);
@@ -45,6 +47,7 @@ namespace EcommerceBe.Services
                 var paymentUrl = vnpay.CreateRequestUrl(_config.BaseUrl, _config.HashSecret);
 
                 _logger.LogInformation($"VNPay payment URL created for order {request.OrderId}");
+                _logger.LogDebug($"Payment URL: {paymentUrl}");
 
                 return new PaymentResponseDto
                 {
@@ -70,16 +73,40 @@ namespace EcommerceBe.Services
         {
             var callback = new PaymentCallbackDto();
 
+            // Process all query parameters
             foreach (var param in queryParams)
             {
                 var property = typeof(PaymentCallbackDto).GetProperty(param.Key);
-                if (property != null)
+                if (property != null && property.CanWrite)
                 {
                     property.SetValue(callback, param.Value.ToString());
                 }
             }
 
+            _logger.LogInformation($"Processing VNPay callback for order {callback.vnp_TxnRef}: ResponseCode={callback.vnp_ResponseCode}, TransactionStatus={callback.vnp_TransactionStatus}, Amount={callback.vnp_Amount}");
+
             return callback;
+        }
+
+        public string GetResponseCodeMeaning(string responseCode)
+        {
+            return responseCode switch
+            {
+                "00" => "Giao dịch thành công",
+                "07" => "Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).",
+                "09" => "Giao dịch không thành công do: Thẻ/Tài khoản của khách hàng chưa đăng ký dịch vụ InternetBanking tại ngân hàng.",
+                "10" => "Giao dịch không thành công do: Khách hàng xác thực thông tin thẻ/tài khoản không đúng quá 3 lần",
+                "11" => "Giao dịch không thành công do: Đã hết hạn chờ thanh toán. Xin quý khách vui lòng thực hiện lại giao dịch.",
+                "12" => "Giao dịch không thành công do: Thẻ/Tài khoản của khách hàng bị khóa.",
+                "13" => "Giao dịch không thành công do Quý khách nhập sai mật khẩu xác thực giao dịch (OTP). Xin quý khách vui lòng thực hiện lại giao dịch.",
+                "24" => "Giao dịch không thành công do: Khách hàng hủy giao dịch",
+                "51" => "Giao dịch không thành công do: Tài khoản của quý khách không đủ số dư để thực hiện giao dịch.",
+                "65" => "Giao dịch không thành công do: Tài khoản của Quý khách đã vượt quá hạn mức giao dịch trong ngày.",
+                "75" => "Ngân hàng thanh toán đang bảo trì.",
+                "79" => "Giao dịch không thành công do: KH nhập sai mật khẩu thanh toán quá số lần quy định. Xin quý khách vui lòng thực hiện lại giao dịch",
+                "99" => "Các lỗi khác (lỗi còn lại, không có trong danh sách mã lỗi đã liệt kê)",
+                _ => $"Mã lỗi không xác định: {responseCode}"
+            };
         }
 
         public async Task<bool> ValidateCallbackAsync(PaymentCallbackDto callback)
@@ -88,16 +115,17 @@ namespace EcommerceBe.Services
             {
                 var vnpay = new VnPayLibrary();
 
-                // Add all parameters except vnp_SecureHash
-                foreach (var prop in typeof(PaymentCallbackDto).GetProperties())
+                // Add all parameters except vnp_SecureHash for validation
+                var properties = typeof(PaymentCallbackDto).GetProperties()
+                    .Where(p => p.Name != "vnp_SecureHash" && p.Name != "vnp_SecureHashType")
+                    .OrderBy(p => p.Name);
+
+                foreach (var prop in properties)
                 {
-                    if (prop.Name != "vnp_SecureHash")
+                    var value = prop.GetValue(callback)?.ToString();
+                    if (!string.IsNullOrEmpty(value))
                     {
-                        var value = prop.GetValue(callback)?.ToString();
-                        if (!string.IsNullOrEmpty(value))
-                        {
-                            vnpay.AddResponseData(prop.Name, value);
-                        }
+                        vnpay.AddResponseData(prop.Name, value);
                     }
                 }
 
@@ -106,17 +134,11 @@ namespace EcommerceBe.Services
                 if (!isValidSignature)
                 {
                     _logger.LogWarning($"Invalid VNPay signature for transaction {callback.vnp_TxnRef}");
+                    _logger.LogDebug($"Expected hash vs received hash validation failed for order {callback.vnp_TxnRef}");
                     return false;
                 }
 
-                // Check response code
-                if (callback.vnp_ResponseCode != "00")
-                {
-                    _logger.LogWarning($"VNPay transaction failed with code {callback.vnp_ResponseCode} for order {callback.vnp_TxnRef}");
-                    return false;
-                }
-
-                _logger.LogInformation($"VNPay callback validated successfully for order {callback.vnp_TxnRef}");
+                _logger.LogInformation($"VNPay callback signature validated successfully for order {callback.vnp_TxnRef} with response code {callback.vnp_ResponseCode}");
                 return true;
             }
             catch (Exception ex)
@@ -128,11 +150,34 @@ namespace EcommerceBe.Services
 
         private string GetIpAddress()
         {
-            return "127.0.0.1"; // In production, get actual client IP
+            try
+            {
+                var context = _httpContextAccessor.HttpContext;
+                if (context != null)
+                {
+                    var ipAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                    if (string.IsNullOrEmpty(ipAddress))
+                    {
+                        ipAddress = context.Request.Headers["X-Real-IP"].FirstOrDefault();
+                    }
+                    if (string.IsNullOrEmpty(ipAddress))
+                    {
+                        ipAddress = context.Connection.RemoteIpAddress?.ToString();
+                    }
+
+                    return !string.IsNullOrEmpty(ipAddress) ? ipAddress : "127.0.0.1";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error getting IP address, using default");
+            }
+
+            return "127.0.0.1";
         }
     }
 
-    // 4. VNPay Library Helper Class
+    // Fixed VNPay Library Helper Class
     public class VnPayLibrary
     {
         private readonly SortedList<string, string> _requestData = new SortedList<string, string>(new VnPayCompare());
@@ -161,20 +206,35 @@ namespace EcommerceBe.Services
 
         public string CreateRequestUrl(string baseUrl, string vnpHashSecret)
         {
-            var data = new StringBuilder();
+            // 1. rawData: dùng để ký → KHÔNG encode value
+            var rawData = new StringBuilder();
             foreach (var kv in _requestData)
             {
-                if (data.Length > 0)
-                {
-                    data.Append('&');
-                }
-                data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value));
+                if (rawData.Length > 0)
+                    rawData.Append('&');
+
+                rawData.Append($"{kv.Key}={kv.Value}"); // ❗ Không encode - ĐÚNG RỒI
             }
 
-            var queryString = data.ToString();
-            var signData = queryString;
-            var vnpSecureHash = HmacSHA512(vnpHashSecret, signData);
-            var paymentUrl = baseUrl + "?" + queryString + "&vnp_SecureHash=" + vnpSecureHash;
+            // 2. queryData: dùng trong URL → PHẢI encode
+            var queryData = new StringBuilder();
+            foreach (var kv in _requestData)
+            {
+                if (queryData.Length > 0)
+                    queryData.Append('&');
+
+                queryData.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value));
+            }
+
+            // 3. Ký bằng rawData (không encode)
+            var vnpSecureHash = HmacSHA512(vnpHashSecret, rawData.ToString());
+
+            // 4. Trả về URL đầy đủ
+            var paymentUrl = $"{baseUrl}?{queryData}&vnp_SecureHash={vnpSecureHash}";
+
+            // Debug logging để kiểm tra
+            System.Diagnostics.Debug.WriteLine($"Raw data for signing: {rawData}");
+            System.Diagnostics.Debug.WriteLine($"Generated hash: {vnpSecureHash}");
 
             return paymentUrl;
         }
@@ -189,6 +249,8 @@ namespace EcommerceBe.Services
         private string GetResponseData()
         {
             var data = new StringBuilder();
+
+            // Remove secure hash related fields
             if (_responseData.ContainsKey("vnp_SecureHashType"))
             {
                 _responseData.Remove("vnp_SecureHashType");
@@ -204,8 +266,14 @@ namespace EcommerceBe.Services
                 {
                     data.Append('&');
                 }
-                data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value));
+                // ❗ QUAN TRỌNG: Không encode khi validate chữ ký
+                // VNPay yêu cầu raw data cho việc validate signature
+                data.Append($"{kv.Key}={kv.Value}");
             }
+
+            // Debug logging
+            System.Diagnostics.Debug.WriteLine($"Response data for validation: {data}");
+
             return data.ToString();
         }
 
@@ -234,9 +302,7 @@ namespace EcommerceBe.Services
             if (x == null) return -1;
             if (y == null) return 1;
 
-            // Đơn giản cho môi trường dev
             return StringComparer.Ordinal.Compare(x, y);
         }
     }
-
 }

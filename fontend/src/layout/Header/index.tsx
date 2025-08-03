@@ -149,7 +149,7 @@ const Header: React.FC = () => {
                         ))}
                     </nav>
                     <div className={styles['top-right']}>
-                        <span>Giao hàng đến</span>
+                        <Link to={'/order'}>Đơn hàng của tôi</Link>
                         <span>Danh sách theo dõi</span>
                         <Link to={'/me'}>Hồ sơ</Link>
                         <FaBell className={styles.icon} />

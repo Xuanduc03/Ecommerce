@@ -10,7 +10,7 @@ interface CartItem {
   productName: string;
   size?: string;
   color?: string;
-  shopId?: string; 
+  shopId?: string;
   category: string;
   price: number;
   quantity: number;
@@ -129,174 +129,174 @@ const cartSlice = createSlice({
 // Thunk actions
 export const addToCart =
   (item: Omit<CartItem, "quantity"> & { quantity?: number }): ThunkAction<Promise<void>, RootState, unknown, AnyAction> =>
-  async (dispatch, getState) => {
-    try {
-      dispatch(cartSlice.actions.cartActionStart());
+    async (dispatch, getState) => {
+      try {
+        dispatch(cartSlice.actions.cartActionStart());
 
-      const token = localStorage.getItem("authToken");
-      const userId = token ? getUserIdFromToken(token) : null; // Giả sử hàm getUserIdFromToken
-      if (!userId) throw new Error("User not authenticated");
+        const token = localStorage.getItem("authToken");
+        const userId = token ? getUserIdFromToken(token) : null; // Giả sử hàm getUserIdFromToken
+        if (!userId) throw new Error("User not authenticated");
 
-      const quantity = item.quantity || 1;
+        const quantity = item.quantity || 1;
 
-      // Optimistic UI update
-      dispatch(
-        cartSlice.actions.addItemLocally({
-          ...item,
-          quantity,
-        })
-      );
+        // Optimistic UI update
+        dispatch(
+          cartSlice.actions.addItemLocally({
+            ...item,
+            quantity,
+          })
+        );
 
-      // Call API to add item
-      await axios.post(
-        `${API_URL}/cart/add`,
-        {
-          UserId: userId,
-          ProductVariantId: item.productId,
-          Quantity: quantity,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        // Call API to add item
+        await axios.post(
+          `${API_URL}/cart/add`,
+          {
+            UserId: userId,
+            ProductVariantId: item.productId,
+            Quantity: quantity,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      // Fetch updated cart from server
-      const response = await axios.get(`${API_URL}/cart/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const updatedItems = response.data.Items.map(mapServerItemToCartItem);
-      dispatch(cartSlice.actions.cartActionSuccess(updatedItems));
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      dispatch(cartSlice.actions.cartActionFailed(errorMsg));
-      // Rollback to localStorage on error
-      dispatch(cartSlice.actions.cartActionSuccess(loadCartFromStorage()));
-    }
-  };
+        // Fetch updated cart from server
+        const response = await axios.get(`${API_URL}/cart/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const updatedItems = response.data.Items.map(mapServerItemToCartItem);
+        dispatch(cartSlice.actions.cartActionSuccess(updatedItems));
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        dispatch(cartSlice.actions.cartActionFailed(errorMsg));
+        // Rollback to localStorage on error
+        dispatch(cartSlice.actions.cartActionSuccess(loadCartFromStorage()));
+      }
+    };
 
 export const removeFromCart =
   (itemId: string, userId?: string): ThunkAction<Promise<void>, RootState, unknown, AnyAction> =>
-  async (dispatch, getState) => {
-    try {
-      dispatch(cartSlice.actions.cartActionStart());
+    async (dispatch, getState) => {
+      try {
+        dispatch(cartSlice.actions.cartActionStart());
 
-      const token = localStorage.getItem("authToken");
-      const currentUserId = userId || (token ? getUserIdFromToken(token) : null);
-      if (!currentUserId) throw new Error("User not authenticated");
+        const token = localStorage.getItem("authToken");
+        const currentUserId = userId || (token ? getUserIdFromToken(token) : null);
+        if (!currentUserId) throw new Error("User not authenticated");
 
-      // Optimistic UI update
-      const itemToRemove = getState().cart.items.find((item) => item.productId === itemId);
-      if (itemToRemove) {
-        dispatch(
-          cartSlice.actions.removeItemLocally({
-            id: itemToRemove.productId,
-            color: itemToRemove.color,
-            size: itemToRemove.size,
-          })
-        );
+        // Optimistic UI update
+        const itemToRemove = getState().cart.items.find((item) => item.productId === itemId);
+        if (itemToRemove) {
+          dispatch(
+            cartSlice.actions.removeItemLocally({
+              id: itemToRemove.productId,
+              color: itemToRemove.color,
+              size: itemToRemove.size,
+            })
+          );
+        }
+
+        // Call API to remove item
+        await axios.delete(`${API_URL}/cart/${currentUserId}/item/${itemId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Fetch updated cart from server
+        const response = await axios.get(`${API_URL}/cart/${currentUserId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const updatedItems = response.data.Items.map(mapServerItemToCartItem);
+        dispatch(cartSlice.actions.cartActionSuccess(updatedItems));
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        dispatch(cartSlice.actions.cartActionFailed(errorMsg));
+        // Rollback to localStorage on error
+        dispatch(cartSlice.actions.cartActionSuccess(loadCartFromStorage()));
       }
-
-      // Call API to remove item
-      await axios.delete(`${API_URL}/cart/${currentUserId}/item/${itemId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Fetch updated cart from server
-      const response = await axios.get(`${API_URL}/cart/${currentUserId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const updatedItems = response.data.Items.map(mapServerItemToCartItem);
-      dispatch(cartSlice.actions.cartActionSuccess(updatedItems));
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      dispatch(cartSlice.actions.cartActionFailed(errorMsg));
-      // Rollback to localStorage on error
-      dispatch(cartSlice.actions.cartActionSuccess(loadCartFromStorage()));
-    }
-  };
+    };
 
 export const updateCartItemQuantity =
   (id: string, quantity: number, size?: string, color?: string): ThunkAction<Promise<void>, RootState, unknown, AnyAction> =>
-  async (dispatch, getState) => {
-    try {
-      dispatch(cartSlice.actions.cartActionStart());
+    async (dispatch, getState) => {
+      try {
+        dispatch(cartSlice.actions.cartActionStart());
 
-      const token = localStorage.getItem("authToken");
-      const userId = token ? getUserIdFromToken(token) : null;
-      if (!userId) throw new Error("User not authenticated");
+        const token = localStorage.getItem("authToken");
+        const userId = token ? getUserIdFromToken(token) : null;
+        if (!userId) throw new Error("User not authenticated");
 
-      // Optimistic UI update
-      dispatch(cartSlice.actions.updateItemQuantity({ id, quantity, size, color }));
+        // Optimistic UI update
+        dispatch(cartSlice.actions.updateItemQuantity({ id, quantity, size, color }));
 
-      // Call API to update quantity
-      await axios.put(
-        `${API_URL}/cart/update`,
-        {
-          CartItemId: id, // Sử dụng CartItemId thay vì id
-          Quantity: quantity,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        // Call API to update quantity
+        await axios.put(
+          `${API_URL}/cart/update`,
+          {
+            CartItemId: id, // Sử dụng CartItemId thay vì id
+            Quantity: quantity,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      // Fetch updated cart from server
-      const response = await axios.get(`${API_URL}/cart/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const updatedItems = response.data.Items.map(mapServerItemToCartItem);
-      dispatch(cartSlice.actions.cartActionSuccess(updatedItems));
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      dispatch(cartSlice.actions.cartActionFailed(errorMsg));
-      // Rollback to localStorage on error
-      dispatch(cartSlice.actions.cartActionSuccess(loadCartFromStorage()));
-    }
-  };
+        // Fetch updated cart from server
+        const response = await axios.get(`${API_URL}/cart/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const updatedItems = response.data.Items.map(mapServerItemToCartItem);
+        dispatch(cartSlice.actions.cartActionSuccess(updatedItems));
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        dispatch(cartSlice.actions.cartActionFailed(errorMsg));
+        // Rollback to localStorage on error
+        dispatch(cartSlice.actions.cartActionSuccess(loadCartFromStorage()));
+      }
+    };
 
 export const syncCartWithServer =
   (): ThunkAction<Promise<void>, RootState, unknown, AnyAction> =>
-  async (dispatch, getState) => {
-    try {
-      dispatch(cartSlice.actions.cartActionStart());
+    async (dispatch, getState) => {
+      try {
+        dispatch(cartSlice.actions.cartActionStart());
 
-      const token = localStorage.getItem("authToken");
-      const userId = token ? getUserIdFromToken(token) : null;
-      if (!userId) throw new Error("User not authenticated");
+        const token = localStorage.getItem("authToken");
+        const userId = token ? getUserIdFromToken(token) : null;
+        if (!userId) throw new Error("User not authenticated");
 
-      const response = await axios.get(`${API_URL}/cart/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const updatedItems = response.data.Items.map(mapServerItemToCartItem);
-      dispatch(cartSlice.actions.cartActionSuccess(updatedItems));
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      dispatch(cartSlice.actions.cartActionFailed(errorMsg));
-    }
-  };
+        const response = await axios.get(`${API_URL}/cart/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const updatedItems = response.data.Items.map(mapServerItemToCartItem);
+        dispatch(cartSlice.actions.cartActionSuccess(updatedItems));
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        dispatch(cartSlice.actions.cartActionFailed(errorMsg));
+      }
+    };
 
 export const clearCart =
   (): ThunkAction<Promise<void>, RootState, unknown, AnyAction> =>
-  async (dispatch, getState) => {
-    try {
-      dispatch(cartSlice.actions.cartActionStart());
+    async (dispatch, getState) => {
+      try {
+        dispatch(cartSlice.actions.cartActionStart());
 
-      const token = localStorage.getItem("authToken");
-      const userId = token ? getUserIdFromToken(token) : null;
-      if (!userId) throw new Error("User not authenticated");
+        const token = localStorage.getItem("authToken");
+        const userId = token ? getUserIdFromToken(token) : null;
+        if (!userId) throw new Error("User not authenticated");
 
-      // Optimistic UI update
-      dispatch(cartSlice.actions.clearCartLocally());
+        // Optimistic UI update
+        dispatch(cartSlice.actions.clearCartLocally());
 
-      // Call API to clear cart
-      await axios.delete(`${API_URL}/cart/${userId}/clear`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        // Call API to clear cart
+        await axios.delete(`${API_URL}/cart/${userId}/clear`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      dispatch(cartSlice.actions.cartActionSuccess([]));
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      dispatch(cartSlice.actions.cartActionFailed(errorMsg));
-      // Rollback to localStorage on error
-      dispatch(cartSlice.actions.cartActionSuccess(loadCartFromStorage()));
-    }
-  };
+        dispatch(cartSlice.actions.cartActionSuccess([]));
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        dispatch(cartSlice.actions.cartActionFailed(errorMsg));
+        // Rollback to localStorage on error
+        dispatch(cartSlice.actions.cartActionSuccess(loadCartFromStorage()));
+      }
+    };
 
 // Helper function to extract userId from token (giả định)
 const getUserIdFromToken = (token: string): string => {

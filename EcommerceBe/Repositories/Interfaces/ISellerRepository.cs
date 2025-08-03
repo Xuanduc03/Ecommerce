@@ -12,5 +12,7 @@ namespace EcommerceBe.Repositories.Interfaces
         Task<Seller?> GetByIdAsync(Guid sellerId);
         Task<Seller?> GetByUserIdAsync(Guid userId);
 
+
+
     }
 }

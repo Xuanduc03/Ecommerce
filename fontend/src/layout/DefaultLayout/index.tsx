@@ -3,6 +3,7 @@ import Header from '../Header';
 import style from "./DefaultLayout.module.scss";
 import classNames from 'classnames/bind';
 import { useLocation } from 'react-router-dom';
+import Footer from '../Foolter';
 
 const cx = classNames.bind(style);
 
@@ -24,6 +25,8 @@ const DefaultLayout : React.FC<DefaultLayoutProps> = ({ children }) => {
         <div className={cx('container')}>
             {children}
         </div>
+
+        <Footer />
     </div>
   )
 }

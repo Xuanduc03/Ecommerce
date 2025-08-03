@@ -13,6 +13,13 @@ namespace EcommerceBe.Repositories.Interfaces
         Task<List<Order>> GetOrdersByDateRangeAsync(DateTime from, DateTime to);
         Task CancelOrderAsync(Guid orderId, string reason);
         Task<List<Order>> GetOrdersByShopIdAsync(Guid shopId);
+        Task DeleteAsync(Order order);
+        Task SaveChangeAsync();
         Task<bool> CheckOrderBelongsToUserAsync(Guid orderId, Guid userId);
+
+
+        Task<decimal> GetTotalRevenueAsync(Guid shopId, DateTime? from = null, DateTime? to = null);
+        Task<int> GetTotalOrdersAsync(Guid shopId, DateTime? from = null, DateTime? to = null);
+        Task<OrderStatusStatsDto> GetOrderStatusStatsAsync(Guid shopId, DateTime? from = null, DateTime? to = null);
     }
 }

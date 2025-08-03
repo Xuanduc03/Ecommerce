@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   Tabs,
@@ -20,6 +20,7 @@ import {
   message
 } from 'antd';
 import { SearchOutlined, EyeOutlined, CarOutlined } from '@ant-design/icons';
+import axios from 'axios';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -53,134 +54,88 @@ interface FilterState {
   shippingChannel: string;
 }
 
-// Mock data
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    orderCode: 'ORD001',
-    createdAt: '2024-01-15 10:30:00',
-    productName: 'iPhone 15 Pro Max',
-    quantity: 1,
-    totalPrice: 29990000,
-    status: 'pending',
-    customerName: 'Nguyễn Văn A',
-    customerPhone: '0901234567',
-    customerAddress: '123 Đường ABC, Phường XYZ, Quận 1, TP.HCM',
-    products: [
-      {
-        name: 'iPhone 15 Pro Max 256GB',
-        quantity: 1,
-        price: 29990000,
-        image: '/api/placeholder/60/60'
-      }
-    ],
-    shippingChannel: 'Giao hàng nhanh'
-  },
-  {
-    id: '2',
-    orderCode: 'ORD002',
-    createdAt: '2024-01-14 14:20:00',
-    productName: 'Samsung Galaxy S24',
-    quantity: 2,
-    totalPrice: 40000000,
-    status: 'processed',
-    customerName: 'Trần Thị B',
-    customerPhone: '0912345678',
-    customerAddress: '456 Đường DEF, Phường UVW, Quận 2, TP.HCM',
-    products: [
-      {
-        name: 'Samsung Galaxy S24 Ultra',
-        quantity: 2,
-        price: 20000000,
-        image: '/api/placeholder/60/60'
-      }
-    ],
-    shippingChannel: 'Giao hàng tiết kiệm'
-  },
-  {
-    id: '3',
-    orderCode: 'ORD003',
-    createdAt: '2024-01-13 09:15:00',
-    productName: 'MacBook Pro M3',
-    quantity: 1,
-    totalPrice: 55000000,
-    status: 'shipping',
-    customerName: 'Lê Văn C',
-    customerPhone: '0923456789',
-    customerAddress: '789 Đường GHI, Phường RST, Quận 3, TP.HCM',
-    products: [
-      {
-        name: 'MacBook Pro M3 14 inch',
-        quantity: 1,
-        price: 55000000,
-        image: '/api/placeholder/60/60'
-      }
-    ],
-    shippingChannel: 'Viettel Post',
-    trackingNumber: 'VTP123456789'
-  },
-  {
-    id: '4',
-    orderCode: 'ORD004',
-    createdAt: '2024-01-12 16:45:00',
-    productName: 'AirPods Pro 2',
-    quantity: 3,
-    totalPrice: 18000000,
-    status: 'completed',
-    customerName: 'Phạm Thị D',
-    customerPhone: '0934567890',
-    customerAddress: '321 Đường JKL, Phường MNO, Quận 4, TP.HCM',
-    products: [
-      {
-        name: 'AirPods Pro 2nd Generation',
-        quantity: 3,
-        price: 6000000,
-        image: '/api/placeholder/60/60'
-      }
-    ],
-    shippingChannel: 'Giao hàng nhanh'
-  },
-  {
-    id: '5',
-    orderCode: 'ORD005',
-    createdAt: '2024-01-11 11:30:00',
-    productName: 'iPad Air M2',
-    quantity: 1,
-    totalPrice: 15000000,
-    status: 'cancelled',
-    customerName: 'Hoàng Văn E',
-    customerPhone: '0945678901',
-    customerAddress: '654 Đường PQR, Phường STU, Quận 5, TP.HCM',
-    products: [
-      {
-        name: 'iPad Air M2 64GB',
-        quantity: 1,
-        price: 15000000,
-        image: '/api/placeholder/60/60'
-      }
-    ],
-    shippingChannel: 'Giao hàng tiết kiệm'
-  }
-];
-
 const OrderSellerManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
-  const [orders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [shopId, setShopId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [filters, setFilters] = useState<FilterState>({
     searchText: '',
     dateRange: null,
     shippingChannel: ''
   });
-  
+
   // Modal states
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [shippingModalVisible, setShippingModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  
+
   // Shipping form states
   const [shippingMethod, setShippingMethod] = useState<'pickup' | 'dropoff'>('pickup');
   const [pickupDate, setPickupDate] = useState<string>('');
   const [trackingNumber, setTrackingNumber] = useState<string>('');
+
+
+  const token = localStorage.getItem("authToken");
+
+  // Fetch shopId của seller
+  const fetchShopForSeller = async () => {
+    try {
+      const sellerRes = await axios.get("https://localhost:7040/api/seller/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const seller = sellerRes.data;
+      if (!seller?.sellerId) return message.error("Không tìm thấy thông tin seller!");
+
+      const shopRes = await axios.get(`https://localhost:7040/api/shop/seller/${seller.sellerId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const shop = shopRes.data;
+      if (!shop?.shopId) return message.error("Seller chưa có cửa hàng!");
+
+      setShopId(shop.shopId);
+      console.log("shop", shop.shopId);
+    } catch {
+      message.error("Không thể tải thông tin Shop cho seller!");
+    }
+  };
+  useEffect(() => {
+    fetchShopForSeller();
+  }, [token]);
+
+  const fetchOrder = async (shopId: string) => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`https://localhost:7040/api/order/shop/${shopId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const rawOrders = res.data || [];
+
+      const transformedOrders = rawOrders.map((order: any) => {
+        const parts = order.shippingAddress.split(',').map((p: string) => p.trim());
+
+        return {
+          ...order,
+          customerName: parts[0] || '',
+          customerPhone: parts[1] || '',
+          customerAddress: parts.slice(2).join(', ') || ''
+        };
+      });
+
+      setOrders(transformedOrders);
+
+    } catch {
+      message.error("Không thể tải sản phẩm cho shop!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (shopId) {
+      fetchOrder(shopId);
+    }
+  }, [shopId]);
 
   // Status mapping
   const statusMap = {
@@ -211,7 +166,7 @@ const OrderSellerManager: React.FC = () => {
 
     // Filter by search text
     if (filters.searchText) {
-      filtered = filtered.filter(order => 
+      filtered = filtered.filter(order =>
         order.orderCode.toLowerCase().includes(filters.searchText.toLowerCase()) ||
         order.productName.toLowerCase().includes(filters.searchText.toLowerCase())
       );
@@ -239,8 +194,8 @@ const OrderSellerManager: React.FC = () => {
   const columns = [
     {
       title: 'Mã đơn hàng',
-      dataIndex: 'orderCode',
-      key: 'orderCode',
+      dataIndex: 'orderId',
+      key: 'orderId',
       width: 120,
       render: (text: string) => <Text strong>{text}</Text>
     },
@@ -265,22 +220,34 @@ const OrderSellerManager: React.FC = () => {
       align: 'center' as const
     },
     {
-      title: 'Tổng tiền',
-      dataIndex: 'totalPrice',
-      key: 'totalPrice',
-      width: 150,
-      render: (amount: number) => `${amount.toLocaleString('vi-VN')} ₫`
+      title: "Tổng tiền",
+      dataIndex: "totalAmount",
+      render: (val: any) =>
+        val.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
+    },
+    {
+      title: 'Khách hàng',
+      dataIndex: 'customerName',
+      key: 'customerName',
+      width: 150
+    },
+    {
+      title: 'SĐT',
+      dataIndex: 'customerPhone',
+      key: 'customerPhone',
+      width: 120
+    },
+    {
+      title: 'Địa chỉ',
+      dataIndex: 'customerAddress',
+      key: 'customerAddress',
+      width: 250
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string) => (
-        <Tag color={statusColors[status as keyof typeof statusColors]}>
-          {statusMap[status as keyof typeof statusMap]}
-        </Tag>
-      )
     },
     {
       title: 'Hành động',
@@ -342,7 +309,7 @@ const OrderSellerManager: React.FC = () => {
       message.error('Vui lòng nhập mã tracking!');
       return;
     }
-    
+
     if (shippingMethod === 'pickup' && !pickupDate) {
       message.error('Vui lòng chọn ngày pickup!');
       return;

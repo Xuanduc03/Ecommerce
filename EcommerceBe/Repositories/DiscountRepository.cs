@@ -19,6 +19,8 @@ namespace EcommerceBe.Repositories
             var query = _context.Discounts
                 .Include(d => d.Shop)
                 .Include(d => d.Order)
+                .Include(d => d.DiscountProducts)
+                    .ThenInclude(dp => dp.Product)
                 .AsQueryable();
 
             if (shopId.HasValue)
@@ -34,12 +36,13 @@ namespace EcommerceBe.Repositories
             return await _context.Discounts
                 .Include(d => d.Shop)
                 .Include(d => d.Order)
+                .Include(d => d.DiscountProducts)
+                    .ThenInclude(dp => dp.Product)
                 .FirstOrDefaultAsync(d => d.DiscountId == discountId);
         }
 
         public async Task<Discount> CreateAsync(Discount discount)
         {
-            discount.DiscountId = Guid.NewGuid();
             _context.Discounts.Add(discount);
             await _context.SaveChangesAsync();
             return discount;
@@ -47,24 +50,56 @@ namespace EcommerceBe.Repositories
 
         public async Task<Discount> UpdateAsync(Guid discountId, Discount discount)
         {
-            var existingDiscount = await _context.Discounts.FindAsync(discountId);
+            var existingDiscount = await _context.Discounts
+                .Include(d => d.DiscountProducts)
+                .FirstOrDefaultAsync(d => d.DiscountId == discountId);
+
             if (existingDiscount == null)
             {
                 return null;
             }
 
+            // Cập nhật thông tin cơ bản
             existingDiscount.Name = discount.Name;
             existingDiscount.OrderId = discount.OrderId;
+            existingDiscount.ShopId = discount.ShopId;
             existingDiscount.StartDate = discount.StartDate;
             existingDiscount.EndDate = discount.EndDate;
+            existingDiscount.DiscountType = discount.DiscountType;
+            existingDiscount.DiscountValue = discount.DiscountValue;
+
+            // Xóa tất cả DiscountProducts cũ
+            if (existingDiscount.DiscountProducts.Any())
+            {
+                _context.DiscountProducts.RemoveRange(existingDiscount.DiscountProducts);
+            }
+
+            // Thêm DiscountProducts mới
+            if (discount.DiscountProducts != null && discount.DiscountProducts.Any())
+            {
+                foreach (var dp in discount.DiscountProducts)
+                {
+                    _context.DiscountProducts.Add(new DiscountProduct
+                    {
+                        DiscountId = discountId,
+                        ProductId = dp.ProductId
+                    });
+                }
+            }
 
             await _context.SaveChangesAsync();
-            return existingDiscount;
-        }
 
+            // Load lại để trả về đầy đủ thông tin
+            return await _context.Discounts
+                .Include(d => d.DiscountProducts)
+                .FirstOrDefaultAsync(d => d.DiscountId == discountId);
+        }
         public async Task<bool> DeleteAsync(Guid discountId)
         {
-            var discount = await _context.Discounts.FindAsync(discountId);
+            var discount = await _context.Discounts
+                .Include(d => d.DiscountProducts) // Include để xóa các bản ghi liên kết
+                .FirstOrDefaultAsync(d => d.DiscountId == discountId);
+
             if (discount == null)
             {
                 return false;
@@ -77,7 +112,18 @@ namespace EcommerceBe.Repositories
 
         public async Task<bool> IsDiscountBelongingToShopAsync(Guid discountId, Guid shopId)
         {
-            return await _context.Discounts.AnyAsync(d => d.DiscountId == discountId && d.ShopId == shopId);
+            return await _context.Discounts
+                .AnyAsync(d => d.DiscountId == discountId && d.ShopId == shopId);
+        }
+
+        public async Task<Discount> GetByCodeAsync(string code)
+        {
+            return await _context.Discounts
+                .Include(d => d.Shop)
+                .Include(d => d.Order)
+                .Include(d => d.DiscountProducts)
+                    .ThenInclude(dp => dp.Product)
+                .FirstOrDefaultAsync(d => d.Name == code);
         }
     }
 }

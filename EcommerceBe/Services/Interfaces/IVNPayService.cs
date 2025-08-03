@@ -7,5 +7,7 @@ namespace EcommerceBe.Services.Interfaces
         Task<PaymentResponseDto> CreatePaymentAsync(PaymentRequestDto request);
         Task<bool> ValidateCallbackAsync(PaymentCallbackDto callback);
         Task<PaymentCallbackDto> ProcessCallbackAsync(IQueryCollection queryParams);
+        string GetResponseCodeMeaning(string responseCode);
+
     }
 }

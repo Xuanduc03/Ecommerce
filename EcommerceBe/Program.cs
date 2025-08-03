@@ -20,6 +20,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
 );
 
+
+builder.Services.Configure<EcommerceBe.Dto.VNPayConfig>(
+    builder.Configuration.GetSection("VNPay"));
+
+// Add VNPay service
+builder.Services.AddScoped<EcommerceBe.Services.Interfaces.IVNPayService, EcommerceBe.Services.VNPayService>();
+
 // Add CORS policy
 builder.Services.AddCors(options =>
 {

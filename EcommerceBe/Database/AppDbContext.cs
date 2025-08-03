@@ -14,6 +14,7 @@ namespace EcommerceBe.Database
         public DbSet<Shop> Shops { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<ProductImages> ProductImages { get; set; }
+        public DbSet<DiscountProduct> DiscountProducts { get; set; }
         public DbSet<ProductCategories> ProductCategories { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
@@ -106,6 +107,51 @@ namespace EcommerceBe.Database
 
             modelBuilder.Entity<Product>()
                 .HasIndex(p => p.ShopId);
+
+            modelBuilder.Entity<Discount>(entity =>
+            {
+                entity.HasKey(d => d.DiscountId);
+                entity.Property(d => d.Name)
+                      .IsRequired()
+                      .HasMaxLength(100);
+                entity.Property(d => d.ShopId)
+                      .IsRequired();
+                entity.Property(d => d.StartDate)
+                      .IsRequired();
+                entity.Property(d => d.EndDate)
+                      .IsRequired();
+                entity.Property(d => d.DiscountType)
+                      .IsRequired();
+                entity.Property(d => d.DiscountValue)
+                      .IsRequired()
+                      .HasPrecision(18, 2);
+
+                entity.HasOne(d => d.Shop)
+                      .WithMany(s => s.Discounts)
+                      .HasForeignKey(d => d.ShopId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.Order)
+                      .WithOne(o => o.Discount)
+                      .HasForeignKey<Discount>(d => d.OrderId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<DiscountProduct>(entity =>
+            {
+                entity.ToTable("DiscountProducts");
+                entity.HasKey(dp => new { dp.DiscountId, dp.ProductId });
+
+                entity.HasOne(dp => dp.Discount)
+                      .WithMany(d => d.DiscountProducts)
+                      .HasForeignKey(dp => dp.DiscountId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(dp => dp.Product)
+                      .WithMany(p => p.DiscountProducts)
+                      .HasForeignKey(dp => dp.ProductId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
     }

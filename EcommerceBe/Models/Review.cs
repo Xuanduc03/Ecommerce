@@ -13,8 +13,9 @@ namespace EcommerceBe.Models
         public Guid ProductId { get; set; }
         public int Rating { get; set; }
         public string Comment { get; set; }
-        public DateTime CreateAt { get; set; } 
-
+        public DateTime CreateAt { get; set; }
+        public string? SellerReply { get; set; } // Nội dung phản hồi của seller
+        public DateTime? SellerReplyAt { get; set; } // Thời gian phản hồi
         public User user { get; set; }
         public Product product { get; set; }
     }

@@ -193,23 +193,7 @@ const UsersManager: React.FC = () => {
   };
 
   const columns: ColumnsType<User> = [
-    {
-      title: '',
-      dataIndex: 'select',
-      width: 40,
-      render: (_, record) => (
-        <input
-          type="checkbox"
-          checked={selectedRowKeys.includes(record.key)}
-          onChange={(e) => {
-            const newSelectedRowKeys = e.target.checked
-              ? [...selectedRowKeys, record.key]
-              : selectedRowKeys.filter((key) => key !== record.key);
-            setSelectedRowKeys(newSelectedRowKeys);
-          }}
-        />
-      ),
-    },
+
     { title: 'STT', dataIndex: 'stt', key: 'stt', width: 60, align: 'center' },
     { title: 'Tên đăng nhập', dataIndex: 'username', key: 'username' },
     { title: 'Email', dataIndex: 'email', key: 'email' },

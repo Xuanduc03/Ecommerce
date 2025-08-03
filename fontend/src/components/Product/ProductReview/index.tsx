@@ -6,11 +6,13 @@ import { toast } from 'react-toastify';
 
 export interface Review {
   id: number;
-  author: string;
+  userName: string;
   rating: number;
-  content: string;
+  comment: string;
   likes: number;
-  timeAgo: string;
+  createAt: string;
+  sellerReply?: string;
+  sellerReplyAt?: string;
   isVerified: boolean;
   isRecommended: boolean;
 }
@@ -20,9 +22,9 @@ interface ProductReviewProps {
   productName: string;
   productImage?: string;
   reviews: Review[];
-  totalRating: number; 
-  totalReviewCount: number; 
-  totalSatisfied?: string; 
+  totalRating: number;
+  totalReviewCount: number;
+  totalSatisfied?: string;
   onSubmitReview?: (review: {
     rating: number;
     comment: string;
@@ -178,37 +180,40 @@ const ProductReview: React.FC<ProductReviewProps> = ({
         {reviews.slice(0, showAllReviews ? reviews.length : 2).map((review) => (
           <div key={review.id} className="review-item">
             <div className="review-author">
-              <span className="author-name">{review.author}</span>
-              {review.isVerified && (
-                <span className="verified-badge">
-                  ✓ Đã mua tại Shop
-                </span>
-              )}
+              <span className="author-name">{review.userName}</span>
             </div>
 
             <div className="review-rating">
               <div style={{ display: 'flex' }}>
                 {renderStars(review.rating)}
               </div>
-              {review.isRecommended && (
-                <div className="recommend-badge">
-                  <Heart size={14} fill="currentColor" />
-                  Sẽ giới thiệu cho bạn bè, người thân
-                </div>
-              )}
             </div>
 
             <div className="review-content">
-              {review.content}
+
+              {review.comment}
             </div>
 
             <div className="review-footer">
               <button className="like-button">
-                <ThumbsUp size={14} />
-                Hữu ích ({review.likes})
+                {review.createAt && (
+                  <div className="reply-time">
+                    {new Date(review.createAt).toLocaleString('vi-VN')}
+                  </div>
+                )}
               </button>
-              <span>{review.timeAgo}</span>
             </div>
+
+            {review.sellerReply && (
+              <div className="seller-reply">
+                <div className="reply-label">Phản hồi từ người bán:</div>
+                <div className="reply-content">{review.sellerReply} - {review.sellerReplyAt && (
+                  <div className="reply-time">
+                    {new Date(review.sellerReplyAt).toLocaleString('vi-VN')}
+                  </div>
+                )}</div>
+              </div>
+            )}
           </div>
         ))}
 

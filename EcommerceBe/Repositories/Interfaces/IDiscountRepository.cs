@@ -10,6 +10,7 @@ namespace EcommerceBe.Repositories.Interfaces
         Task<Discount> UpdateAsync(Guid discountId, Discount discount);
         Task<bool> DeleteAsync(Guid discountId);
         Task<bool> IsDiscountBelongingToShopAsync(Guid discountId, Guid shopId);
+        Task<Discount> GetByCodeAsync(string code);
     }
 
 }

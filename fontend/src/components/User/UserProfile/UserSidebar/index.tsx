@@ -17,8 +17,6 @@ const sidebarItems = [
   { label: "Hồ Sơ", key: "profile" },
   { label: "Địa Chỉ", key: "address" },
   { label: "Đổi Mật Khẩu", key: "password" },
-  { label: "Cài Đặt Thông Báo", key: "notifications" },
-  { label: "Thông Tin Cá Nhân", key: "info" },
 ];
 
 const UserSidebar: React.FC<SidebarProps> = ({ activeTab, onChangeTab, profile }) => {

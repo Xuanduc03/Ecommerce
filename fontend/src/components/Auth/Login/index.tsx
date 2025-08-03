@@ -22,6 +22,7 @@ const Login: React.FC = () => {
   const [data, setData] = useState<FormData>({ Email: "", Password: "" });
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState<{ [key: string]: boolean }>({
     Email: false,
     Password: false,
@@ -170,7 +171,7 @@ const Login: React.FC = () => {
               })}
             >
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="Password"
                 value={data.Password}
                 onChange={handleChange}
@@ -179,6 +180,13 @@ const Login: React.FC = () => {
                 required
                 className={styles.input}
               />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className={styles.togglePassword}
+                style={{ cursor: "pointer", position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)" }}
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </span>
               <label className={styles.label}>Password</label>
               {formErrors.Password && (
                 <span className={styles.error}>{formErrors.Password}</span>

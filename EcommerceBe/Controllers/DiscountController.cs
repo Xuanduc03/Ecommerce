@@ -84,12 +84,11 @@ namespace EcommerceBe.Controllers
                 var createdDiscount = await _discountService.CreateAsync(dto, userId, role);
                 return CreatedAtAction(nameof(GetById), new { id = createdDiscount.DiscountId }, createdDiscount);
             }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
+           
             catch (Exception ex)
             {
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
                 return StatusCode(500, new { message = "Lỗi hệ thống: " + ex.Message });
             }
         }
@@ -120,6 +119,8 @@ namespace EcommerceBe.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Update Error: {ex.Message}");
+                Console.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
                 return StatusCode(500, new { message = "Lỗi hệ thống: " + ex.Message });
             }
         }

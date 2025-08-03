@@ -247,7 +247,7 @@ const AddProductStepForm: React.FC = () => {
                   { type: 'number', min: 1000, message: 'Giá phải lớn hơn 1.000đ' }
                 ]}
               >
-                <InputNumber style={{ width: '100%' }} min={1000} />
+                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập giá gốc" formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
               </Form.Item>
             </Col>
 
@@ -372,7 +372,7 @@ const AddProductStepForm: React.FC = () => {
                       </Col>
                       <Col span={8}>
                         <Form.Item {...restField} name={[name, 'price']} label="Giá bán (VNĐ)" rules={[{ required: true }]}>
-                          <InputNumber min={0} style={{ width: '100%' }} />
+                          <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập giá gốc" formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
                         </Form.Item>
                       </Col>
                       <Col span={8}>

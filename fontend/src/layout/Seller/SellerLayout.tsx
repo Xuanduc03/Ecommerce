@@ -26,6 +26,7 @@ import {
   BarChartOutlined,
   RiseOutlined,
   WalletOutlined,
+  DashboardFilled,
 } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -57,13 +58,11 @@ const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
   };
   const menuItems: MenuItem[] = [
     {
-      key: 'shipment',
-      icon: <TruckOutlined />,
-      label: 'Vận chuyển',
+      key: 'dashboard',
+      icon: <DashboardFilled />,
+      label: 'Trang chủ',
       children: [
-        { key: 'my-shipment', icon: null, label: 'Đơn vận chuyển của tôi' },
-        { key: 'mass-ship', icon: null, label: 'Vận chuyển hàng loạt' },
-        { key: 'shipping-setting', icon: null, label: 'Cài đặt vận chuyển' }
+        { key: '/seller', icon: null, label: 'Trang chủ' },
       ]
     },
     {
@@ -72,8 +71,6 @@ const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
       label: 'Đơn hàng',
       children: [
         { key: "/seller/orders", icon: null, label: 'Đơn hàng của tôi' },
-        { key: 'cancellation', icon: null, label: 'Đơn hủy' },
-        { key: 'return-refund', icon: null, label: 'Trả hàng/Hoàn tiền' }
       ]
     },
     {
@@ -96,16 +93,11 @@ const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
       ]
     },
     {
-      key: 'chat',
-      icon: <SoundOutlined />,
-      label: 'Chat Broadcast'
-    },
-    {
       key: 'finance',
       icon: <WalletOutlined />,
       label: 'Tài chính',
       children: [
-        { key: 'my-income', icon: null, label: 'Thu nhập của tôi' },
+        { key: '/seller/wallet', icon: null, label: 'Thu nhập của tôi' },
         { key: 'my-balance', icon: null, label: 'Số dư của tôi' },
         { key: 'bank-accounts', icon: null, label: 'Tài khoản ngân hàng' }
       ]

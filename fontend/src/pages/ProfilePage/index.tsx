@@ -35,7 +35,6 @@ export const ProfilePage: React.FC = () => {
         fetchUserProfile();
     }, [token]);
 
-    
     const handleUpdateProfile = async (updatedProfile: any) => {
         try {
             setLoading(true);
@@ -46,7 +45,7 @@ export const ProfilePage: React.FC = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 }
             );
-            setUser(response.data); 
+            setUser(response.data);
             setError(null);
             alert("Cập nhật hồ sơ thành công!");
         } catch (err: any) {
@@ -55,7 +54,7 @@ export const ProfilePage: React.FC = () => {
             setLoading(false);
         }
     };
-    
+
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>{error}</div>;

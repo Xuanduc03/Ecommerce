@@ -11,13 +11,16 @@ import {
   DatePicker,
   Divider,
   message,
+  Input,
+  Button,
 } from 'antd';
 import {
   StarFilled,
   ShoppingFilled,
   MessageFilled,
+  DeleteOutlined,
 } from '@ant-design/icons';
-import moment, {type Moment } from 'moment';
+import dayjs, { type Dayjs } from 'dayjs';
 import axios from 'axios';
 
 const { RangePicker } = DatePicker;
@@ -39,6 +42,8 @@ interface Review {
   rating: number;
   comment: string;
   createAt: string;
+  sellerReply?: string | null;
+  sellerReplyAt?: string | null;
 }
 
 interface Stats {
@@ -51,10 +56,11 @@ const ProductReviewPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<[Moment, Moment]>([
-    moment().startOf('month'),
-    moment().endOf('month'),
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([
+    dayjs().startOf('month'),
+    dayjs().endOf('month'),
   ]);
+  const [sellerId, setSellerId] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [shopId, setShopId] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats>({
@@ -62,63 +68,64 @@ const ProductReviewPage: React.FC = () => {
     averageRating: 0,
     totalReviews: 0,
   });
+  const [replyInput, setReplyInput] = useState<{ [key: string]: string }>({});
 
   const token = localStorage.getItem('authToken');
+  console.log('Auth Token:', token); // Debug log
 
-    const fetchShopForSeller = async () => {
+  const fetchShopForSeller = async () => {
     try {
-      const sellerRes = await axios.get("https://localhost:7040/api/seller/me", {
+      const sellerRes = await axios.get('https://localhost:7040/api/seller/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const seller = sellerRes.data;
-      if (!seller?.sellerId) return message.error("Không tìm thấy thông tin seller!");
+      if (!seller?.sellerId) return message.error('Không tìm thấy thông tin seller!');
 
+      setSellerId(seller.sellerId);
       const shopRes = await axios.get(`https://localhost:7040/api/shop/seller/${seller.sellerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const shop = shopRes.data;
-      if (!shop?.shopId) return message.error("Seller chưa có cửa hàng!");
+      if (!shop?.shopId) return message.error('Seller chưa có cửa hàng!');
 
       setShopId(shop.shopId);
-      console.log("shop", shop.shopId);
-    } catch {
-      message.error("Không thể tải thông tin Shop cho seller!");
+    } catch (error: any) {
+      message.error('Không thể tải thông tin Shop cho seller: ' + (error.response?.data?.error || error.message));
     }
   };
-
-  useEffect(() => {
-    fetchShopForSeller();
-  }, []);
-
 
   const fetchReviewsByShop = async (
     shopId: string,
     productId: string | null = null,
-    startDate: Moment | null = null,
-    endDate: Moment | null = null
+    startDate: Dayjs | null = null,
+    endDate: Dayjs | null = null,
+    pageNumber: number = 1,
+    pageSize: number = 10
   ) => {
     try {
       setLoading(true);
-      const params: any = {};
+      const params: any = { pageNumber, pageSize };
       if (productId) params.productId = productId;
       if (startDate) params.startDate = startDate.format('YYYY-MM-DD');
       if (endDate) params.endDate = endDate.format('YYYY-MM-DD');
 
-      const response = await axios.get<Review[]>(`https://localhost:7040/api/review/shop/${shopId}`, {
+      const response = await axios.get(`https://localhost:7040/api/review/shop/${shopId}`, {
+        headers: { Authorization: `Bearer ${token}` },
         params,
       });
 
-      setReviews(response.data);
+      console.log('API Response:', response.data); // Debug log
+      // Xử lý trường hợp API trả về mảng trực tiếp hoặc { data: [...] }
+      const reviewsData = Array.isArray(response.data) ? response.data : response.data.data || [];
+      setReviews(reviewsData);
 
-      if (response.data.length > 0) {
+      if (reviewsData.length > 0) {
         const avgRating =
-          response.data.reduce((sum, r) => sum + r.rating, 0) /
-          response.data.length;
-
+          reviewsData.reduce((sum: number, r: Review) => sum + r.rating, 0) / reviewsData.length;
         setStats((prev) => ({
           ...prev,
           averageRating: Number(avgRating.toFixed(1)),
-          totalReviews: response.data.length,
+          totalReviews: reviewsData.length,
         }));
       } else {
         setStats((prev) => ({
@@ -128,7 +135,8 @@ const ProductReviewPage: React.FC = () => {
         }));
       }
     } catch (error: any) {
-      message.error('Lỗi khi tải đánh giá: ' + error.message);
+      console.error('Error fetching reviews:', error.response?.data || error.message);
+      message.error('Lỗi khi tải đánh giá: ' + (error.response?.data?.error || error.message));
     } finally {
       setLoading(false);
     }
@@ -140,17 +148,76 @@ const ProductReviewPage: React.FC = () => {
       const response = await axios.get(`https://localhost:7040/api/product/shop/${shopId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log('Products Response:', response.data); // Debug log
       setProducts(response.data || []);
       setStats((prev) => ({
         ...prev,
         totalProducts: response.data.length,
       }));
     } catch (error: any) {
-      message.error('Lỗi khi tải sản phẩm: ' + error.message);
+      console.error('Error fetching products:', error.response?.data || error.message);
+      message.error('Lỗi khi tải sản phẩm: ' + (error.response?.data?.error || error.message));
     } finally {
       setLoading(false);
     }
   };
+
+  const handleAddReply = async (reviewId: string) => {
+    const reply = replyInput[reviewId];
+    if (!reply) {
+      message.error('Vui lòng nhập nội dung phản hồi!');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `https://localhost:7040/api/review/reply/${sellerId}`,
+        { reviewId, reply },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      message.success(response.data.message);
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.reviewId === reviewId
+            ? { ...r, sellerReply: response.data.data.sellerReply, sellerReplyAt: response.data.data.sellerReplyAt }
+            : r
+        )
+      );
+      setReplyInput((prev) => ({ ...prev, [reviewId]: '' }));
+    } catch (error: any) {
+      message.error('Lỗi khi thêm phản hồi: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteReply = async (reviewId: string) => {
+    try {
+      setLoading(true);
+      const response = await axios.delete(`https://localhost:7040/api/review/reply/${reviewId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      message.success(response.data.message);
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.reviewId === reviewId
+            ? { ...r, sellerReply: null, sellerReplyAt: null }
+            : r
+        )
+      );
+    } catch (error: any) {
+      message.error('Lỗi khi xóa phản hồi: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShopForSeller();
+  }, []);
 
   useEffect(() => {
     if (shopId) {
@@ -179,8 +246,10 @@ const ProductReviewPage: React.FC = () => {
       title: 'Sản phẩm',
       dataIndex: 'productId',
       key: 'product',
-      render: (id: string) =>
-        products.find((p) => p.productId === id)?.name || 'N/A',
+      render: (id: string) => {
+        const product = products.find((p) => p.productId === id);
+        return product ? product.name : 'N/A';
+      },
     },
     {
       title: 'Đánh giá',
@@ -194,15 +263,60 @@ const ProductReviewPage: React.FC = () => {
       key: 'comment',
     },
     {
+      title: 'Phản hồi của Seller',
+      dataIndex: 'sellerReply',
+      key: 'sellerReply',
+      render: (sellerReply: string | null, record: Review) => (
+        <div>
+          {sellerReply ? (
+            <>
+              <p>{sellerReply}</p>
+              <p style={{ color: '#888', fontSize: '12px' }}>
+                {record.sellerReplyAt
+                  ? dayjs(record.sellerReplyAt).format('DD/MM/YYYY HH:mm')
+                  : 'N/A'}
+              </p>
+              <Button
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+                onClick={() => handleDeleteReply(record.reviewId)}
+                disabled={loading}
+              >
+                Xóa phản hồi
+              </Button>
+            </>
+          ) : (
+            <div>
+              <Input
+                value={replyInput[record.reviewId] || ''}
+                onChange={(e) =>
+                  setReplyInput((prev) => ({ ...prev, [record.reviewId]: e.target.value }))
+                }
+                placeholder="Nhập phản hồi..."
+                style={{ marginBottom: '8px' }}
+                disabled={loading}
+                maxLength={500}
+              />
+              <Button
+                type="primary"
+                onClick={() => handleAddReply(record.reviewId)}
+                disabled={loading}
+              >
+                Gửi phản hồi
+              </Button>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
       title: 'Ngày đánh giá',
       dataIndex: 'createAt',
       key: 'createAt',
-      render: (date: string) => moment(date).format('DD/MM/YYYY HH:mm'),
+      render: (date: string) => dayjs(date).format('DD/MM/YYYY HH:mm'),
     },
   ];
-
-  console.log("Products:", products);
-
 
   return (
     <div style={{ padding: '20px' }}>
@@ -260,10 +374,8 @@ const ProductReviewPage: React.FC = () => {
           <Col span={8}>
             <RangePicker
               style={{ width: '100%' }}
-
-              onChange={(dates) => {
-                if (dates) setDateRange(dates as [Moment, Moment]);
-              }}
+              value={dateRange}
+              onChange={(dates) => setDateRange(dates as [Dayjs | null, Dayjs | null])}
               disabled={loading}
             />
           </Col>
@@ -284,9 +396,7 @@ const ProductReviewPage: React.FC = () => {
       <Card title="Top sản phẩm được đánh giá cao">
         <Row gutter={16}>
           {products
-            .sort(
-              (a, b) => (b.averageRating || 0) - (a.averageRating || 0)
-            )
+            .sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0))
             .slice(0, 3)
             .map((product) => (
               <Col span={8} key={product.productId}>
@@ -322,13 +432,8 @@ const ProductReviewPage: React.FC = () => {
                     title={product.name}
                     description={
                       <>
-                        <Rate
-                          disabled
-                          defaultValue={product.averageRating || 0}
-                        />
-                        <div>
-                          Giá: {product.price?.toLocaleString() || '0'}đ
-                        </div>
+                        <Rate disabled defaultValue={product.averageRating || 0} />
+                        <div>Giá: {product.price?.toLocaleString() || '0'}đ</div>
                         <div>Đã bán: {product.soldQuantity || 0}</div>
                         <Tag color="gold">Top Rated</Tag>
                       </>

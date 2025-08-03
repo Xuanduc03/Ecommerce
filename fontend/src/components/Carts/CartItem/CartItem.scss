@@ -63,6 +63,25 @@
     }
   }
 
+  .quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  button {
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  span {
+    min-width: 20px;
+    text-align: center;
+  }
+}
+
+
   .item-actions {
     display: flex;
     flex-direction: column;

@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 
 interface UserProfile {
   username: string;
+  fullName: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -15,9 +16,16 @@ interface UserProfile {
     day: string;
     month: string;
     year: string;
-  };
+  } | null;
   avatar: string;
 }
+
+
+const genderOptions = [
+  { label: 'Nam', value: true },
+  { label: 'Nữ', value: false },
+  { label: 'Khác', value: null }
+] as const;
 
 interface UserProfileProps {
   user: UserProfile;
@@ -30,7 +38,7 @@ const API_URL = 'https://localhost:7040/api';
 
 const UserProfile: React.FC<UserProfileProps> = ({
   user,
-  onUpdateProfile, // ✅ Sử dụng prop này
+  onUpdateProfile,
 }) => {
   const [profile, setProfile] = useState<UserProfile>({
     ...user,
@@ -38,16 +46,20 @@ const UserProfile: React.FC<UserProfileProps> = ({
   });
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [submitting, setSubmitting] = useState(false); // ✅ Thêm loading state cho submit
+  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    
     setProfile({
       ...user,
-      dateOfBirth: user.dateOfBirth || defaultDateOfBirth,
+       ...parseFullName(user.fullName),
+  dateOfBirth: parseDateOfBirth(user.dateOfBirth),
     });
-    setIsEditing(false); // ✅ Reset editing state khi user thay đổi
+    setIsEditing(false);
   }, [user]);
+
 
   const handleInputChange = (field: keyof UserProfile, value: any) => {
     setProfile((prev) => ({
@@ -65,11 +77,11 @@ const UserProfile: React.FC<UserProfileProps> = ({
         [field]: value,
       },
     }));
-    setIsEditing(true); 
+    setIsEditing(true);
   };
 
   const handleAvatarClick = () => {
-    if (uploading) return; // ✅ Prevent click khi đang upload
+    if (uploading) return;
     fileInputRef.current?.click();
   };
 
@@ -77,7 +89,6 @@ const UserProfile: React.FC<UserProfileProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // ✅ Validate file size và type
     if (file.size > 1024 * 1024) { // 1MB
       toast.error('Kích thước file không được vượt quá 1MB');
       return;
@@ -106,18 +117,17 @@ const UserProfile: React.FC<UserProfileProps> = ({
         },
       });
 
-      const newAvatarUrl = res.data.avatarUrl || res.data.url; // ✅ Flexible response handling
-      
-      // ✅ Cập nhật cả local state và parent component
+      const newAvatarUrl = res.data.avatarUrl || res.data.url;
+
       const updatedProfile = {
         ...profile,
         avatar: newAvatarUrl,
       };
-      
+
       setProfile(updatedProfile);
-      onUpdateProfile({ avatar: newAvatarUrl }); // ✅ Thông báo cho parent component
+      onUpdateProfile({ avatar: newAvatarUrl });
       setIsEditing(true);
-      
+
       toast.success('Tải ảnh thành công!');
     } catch (error: any) {
       console.error('Upload avatar error:', error);
@@ -149,18 +159,23 @@ const UserProfile: React.FC<UserProfileProps> = ({
         toast.error('Vui lòng đăng nhập lại');
         return;
       }
+      const getFormattedDate = (dob: UserProfile['dateOfBirth']) => {
+        if (!dob?.day || !dob.month || !dob.year) return null;
+        return `${dob.year}-${dob.month.padStart(2, '0')}-${dob.day.padStart(2, '0')}`;
+      };
 
       const updateData = {
-        firstName: profile.firstName.trim(),
-        lastName: profile.lastName.trim(),
-        gender: profile.gender,
-        dateOfBirth: profile.dateOfBirth,
+        fullName: `${profile.lastName.trim()} ${profile.firstName.trim()}`.trim(),
         phoneNumber: profile.phoneNumber,
+        email: profile.email,
+        gender: profile.gender,
+        dateOfBirth: getFormattedDate(profile.dateOfBirth),
         avatar: profile.avatar
+
       };
 
       const response = await axios.put(
-        `${API_URL}/auth/profile`,
+        `${API_URL}/user/profile`,
         updateData,
         {
           headers: {
@@ -170,12 +185,9 @@ const UserProfile: React.FC<UserProfileProps> = ({
         }
       );
 
-      // ✅ Cập nhật parent component với dữ liệu mới
-      onUpdateProfile(updateData);
       setIsEditing(false);
       toast.success('Cập nhật thông tin thành công!');
 
-      // ✅ Optional: Cập nhật profile từ response nếu server trả về data
       if (response.data && response.data.user) {
         setProfile(prev => ({
           ...prev,
@@ -192,7 +204,6 @@ const UserProfile: React.FC<UserProfileProps> = ({
     }
   };
 
-  // ✅ Thêm function reset changes
   const handleCancel = () => {
     setProfile({
       ...user,
@@ -201,8 +212,23 @@ const UserProfile: React.FC<UserProfileProps> = ({
     setIsEditing(false);
   };
 
-  if (!profile) return <div className="loading">Đang tải hồ sơ...</div>;
+  const parseDateOfBirth = (dobStr: string | undefined): UserProfile['dateOfBirth'] => {
+    if (!dobStr) return { day: '', month: '', year: '' };
+    const [year, month, day] = dobStr.split('T')[0].split('-');
+    return { day, month, year };
+  };
 
+
+  const parseFullName = (fullName: string | undefined) => {
+    if (!fullName) return { firstName: '', lastName: '' };
+    const parts = fullName.trim().split(' ');
+    return {
+      firstName: parts.pop() || '',
+      lastName: parts.join(' '),
+    };
+  };
+
+  if (!profile) return <div className="loading">Đang tải hồ sơ...</div>;
   return (
     <div className="user-profile-page">
       <div className="main-content">
@@ -245,19 +271,28 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
             <div className="form-group">
               <label>Email</label>
-              <div className="input-with-action">
-                <span className="masked-value">{profile.email}</span>
-                <button type="button" className="change-btn">Thay Đổi</button>
-              </div>
+              <input
+                type="email"
+                value={profile.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className="form-input"
+                placeholder="Nhập email"
+                required
+              />
             </div>
 
             <div className="form-group">
               <label>Số điện thoại</label>
-              <div className="input-with-action">
-                <span className="masked-value">{profile.phoneNumber}</span>
-                <button type="button" className="change-btn">Thay Đổi</button>
-              </div>
+              <input
+                type="tel"
+                value={profile.phoneNumber}
+                onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                className="form-input"
+                placeholder="Nhập số điện thoại"
+                required
+              />
             </div>
+
 
             <div className="form-group">
               <label>Giới tính</label>
@@ -327,8 +362,8 @@ const UserProfile: React.FC<UserProfileProps> = ({
             <div className="form-actions">
               {/* ✅ Thêm nút Cancel */}
               {isEditing && (
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="cancel-btn"
                   onClick={handleCancel}
                   disabled={submitting}
@@ -336,7 +371,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   Hủy
                 </button>
               )}
-              <button 
+              <button
                 className={`save-btn ${!isEditing ? 'disabled' : ''}`}
                 type="submit"
                 disabled={!isEditing || submitting}
@@ -348,9 +383,9 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
           <div className="avatar-section">
             <div className="avatar-upload">
-              <img 
-                src={profile.avatar} 
-                alt="Profile avatar" 
+              <img
+                src={profile.avatar}
+                alt="Profile avatar"
                 onError={(e) => {
                   // ✅ Fallback avatar nếu ảnh lỗi
                   (e.target as HTMLImageElement).src = '/default-avatar.png';

@@ -81,6 +81,15 @@ namespace EcommerceBe.Repositories
                 .ToListAsync();
         }
 
+        public async Task DeleteAsync(Order order)
+        {
+            _context.Orders.Remove(order);
+            await Task.CompletedTask;
+        }
+        public async Task SaveChangeAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
         public async Task CancelOrderAsync(Guid orderId, string reason)
         {
             var order = await _context.Orders.FindAsync(orderId);
@@ -94,7 +103,52 @@ namespace EcommerceBe.Repositories
             return await _context.Orders.AnyAsync(o => o.OrderId == orderId && o.UserId == userId);
         }
 
-       
+        public async Task<decimal> GetTotalRevenueAsync(Guid shopId, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            var query = _context.Orders
+                .Where(o => o.ShopId == shopId && o.Status == OrderStatus.Delivered.ToString());
+
+            if (startDate.HasValue)
+                query = query.Where(o => o.CreatedAt >= startDate);
+            if (endDate.HasValue)
+                query = query.Where(o => o.CreatedAt <= endDate);
+
+            return await query.SumAsync(o => o.TotalAmount);
+        }
+
+        public async Task<OrderStatusStatsDto> GetOrderStatusStatsAsync(Guid shopId, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            var query = _context.Orders.Where(o => o.ShopId == shopId);
+
+            if (startDate.HasValue)
+                query = query.Where(o => o.CreatedAt >= startDate);
+            if (endDate.HasValue)
+                query = query.Where(o => o.CreatedAt <= endDate);
+
+            var statusCounts = await query
+                .GroupBy(o => o.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            return new OrderStatusStatsDto
+            {
+                PendingCount = statusCounts.FirstOrDefault(s => s.Status == OrderStatus.Pending.ToString())?.Count ?? 0,
+                ConfirmedCount = statusCounts.FirstOrDefault(s => s.Status == OrderStatus.Confirmed.ToString())?.Count ?? 0,
+                ShippingCount = statusCounts.FirstOrDefault(s => s.Status == OrderStatus.Shipping.ToString())?.Count ?? 0,
+                DeliveredCount = statusCounts.FirstOrDefault(s => s.Status == OrderStatus.Delivered.ToString())?.Count ?? 0,
+                CancelledCount = statusCounts.FirstOrDefault(s => s.Status == OrderStatus.Cancelled.ToString())?.Count ?? 0
+            };
+        }
+
+        public async Task<int> GetTotalOrdersAsync(Guid shopId, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            var query = _context.Orders.Where(o => o.ShopId == shopId);
+            if (startDate.HasValue)
+                query = query.Where(o => o.CreatedAt >= startDate);
+            if (endDate.HasValue)
+                query = query.Where(o => o.CreatedAt <= endDate);
+            return await query.CountAsync();
+        }
 
     }
 }

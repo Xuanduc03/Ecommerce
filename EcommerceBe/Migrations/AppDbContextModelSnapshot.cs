@@ -120,14 +120,22 @@ namespace EcommerceBe.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<int>("DiscountType")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
-                    b.Property<Guid>("OrderId")
+                    b.Property<Guid?>("OrderId")
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ShopId")
@@ -138,11 +146,27 @@ namespace EcommerceBe.Migrations
 
                     b.HasKey("DiscountId");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("OrderId")
+                        .IsUnique();
 
                     b.HasIndex("ShopId");
 
                     b.ToTable("Discounts");
+                });
+
+            modelBuilder.Entity("EcommerceBe.Models.DiscountProduct", b =>
+                {
+                    b.Property<Guid>("DiscountId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("DiscountId", "ProductId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("DiscountProducts", (string)null);
                 });
 
             modelBuilder.Entity("EcommerceBe.Models.Order", b =>
@@ -151,7 +175,13 @@ namespace EcommerceBe.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("OrderDate")
@@ -160,6 +190,9 @@ namespace EcommerceBe.Migrations
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("ShippedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("ShippingAddressId")
                         .HasColumnType("char(36)");
@@ -283,6 +316,9 @@ namespace EcommerceBe.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<Guid?>("DiscountId")
+                        .HasColumnType("char(36)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
@@ -308,6 +344,8 @@ namespace EcommerceBe.Migrations
                     b.HasKey("ProductId");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("DiscountId");
 
                     b.HasIndex("ShopId");
 
@@ -421,6 +459,12 @@ namespace EcommerceBe.Migrations
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
+
+                    b.Property<string>("SellerReply")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("SellerReplyAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("char(36)");
@@ -585,8 +629,8 @@ namespace EcommerceBe.Migrations
                     b.Property<string>("FullName")
                         .HasColumnType("longtext");
 
-                    b.Property<bool?>("Gender")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<string>("Gender")
+                        .HasColumnType("longtext");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -596,9 +640,6 @@ namespace EcommerceBe.Migrations
 
                     b.Property<string>("Otp")
                         .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("OtpExpires")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -666,10 +707,9 @@ namespace EcommerceBe.Migrations
             modelBuilder.Entity("EcommerceBe.Models.Discount", b =>
                 {
                     b.HasOne("EcommerceBe.Models.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithOne("Discount")
+                        .HasForeignKey("EcommerceBe.Models.Discount", "OrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("EcommerceBe.Models.Shop", "Shop")
                         .WithMany("Discounts")
@@ -680,6 +720,25 @@ namespace EcommerceBe.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("Shop");
+                });
+
+            modelBuilder.Entity("EcommerceBe.Models.DiscountProduct", b =>
+                {
+                    b.HasOne("EcommerceBe.Models.Discount", "Discount")
+                        .WithMany("DiscountProducts")
+                        .HasForeignKey("DiscountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcommerceBe.Models.Product", "Product")
+                        .WithMany("DiscountProducts")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Discount");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("EcommerceBe.Models.Order", b =>
@@ -768,9 +827,15 @@ namespace EcommerceBe.Migrations
                         .WithMany("Products")
                         .HasForeignKey("CategoryId");
 
+                    b.HasOne("EcommerceBe.Models.Discount", "Discount")
+                        .WithMany("Products")
+                        .HasForeignKey("DiscountId");
+
                     b.HasOne("EcommerceBe.Models.Shop", "Shop")
                         .WithMany("Products")
                         .HasForeignKey("ShopId");
+
+                    b.Navigation("Discount");
 
                     b.Navigation("Shop");
                 });
@@ -875,8 +940,17 @@ namespace EcommerceBe.Migrations
                     b.Navigation("SubCategories");
                 });
 
+            modelBuilder.Entity("EcommerceBe.Models.Discount", b =>
+                {
+                    b.Navigation("DiscountProducts");
+
+                    b.Navigation("Products");
+                });
+
             modelBuilder.Entity("EcommerceBe.Models.Order", b =>
                 {
+                    b.Navigation("Discount");
+
                     b.Navigation("OrderItems");
 
                     b.Navigation("Payments");
@@ -884,6 +958,8 @@ namespace EcommerceBe.Migrations
 
             modelBuilder.Entity("EcommerceBe.Models.Product", b =>
                 {
+                    b.Navigation("DiscountProducts");
+
                     b.Navigation("ProductCategories");
 
                     b.Navigation("ProductImages");

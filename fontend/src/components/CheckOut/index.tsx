@@ -111,8 +111,8 @@ const CheckOut: React.FC = () => {
       });
       const addressList = response.data;
       if (addressList == 0) {
-        navigate('/profile');
         toast.error("Bạn chưa có địa chỉ giao hàng nào. Vui lòng thêm địa chỉ trước khi đặt hàng.");
+        navigate('/me');
       }
       setAddresses(addressList);
       const defaultAddr = addressList.find((addr: any) => addr.isDefault);

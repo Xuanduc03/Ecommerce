@@ -18,7 +18,11 @@ namespace EcommerceBe.Models
         public decimal TotalAmount { get; set; }
         public string PaymentMethod { get; set; }
         public string Status { get; set; } // "pending", "processing", "shipped", "delivered", "cancelled"
+        public DateTime? ShippedAt { get; set; }
+        public DateTime? DeliveredAt { get; set; }
+        public DateTime? CancelledAt { get; set; }
 
+        public virtual Discount? Discount { get; set; }
         public User User { get; set; }
         public Shop Shop { get; set; }
         public ShippingAddress ShippingAddress { get; set; }

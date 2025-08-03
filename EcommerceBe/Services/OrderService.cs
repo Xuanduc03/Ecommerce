@@ -15,8 +15,7 @@ namespace EcommerceBe.Services
             _orderRepository = orderRepository;
             _productRepository = productRepository;
         }
-         
-        // create order
+
         public async Task<List<Guid>> CreateOrderAsync(Guid userId, OrderCreateDto dto)
         {
             var orders = new List<Guid>();
@@ -27,6 +26,7 @@ namespace EcommerceBe.Services
                 var shopId = group.Key;
                 var orderItems = new List<OrderItem>();
                 decimal totalAmount = 0;
+                var now = DateTime.UtcNow;
 
                 foreach (var item in group)
                 {
@@ -35,7 +35,7 @@ namespace EcommerceBe.Services
                         throw new Exception($"Product {item.ProductId} not found");
 
                     if (product.StockQuantity < item.Quantity)
-                        throw new Exception($"Not enough stock for product: {item.ProductId}");
+                        throw new Exception($"Not enough stock for product {product.ProductName}");
 
                     await _productRepository.UpdateStockAsync(product.ProductId, product.StockQuantity - item.Quantity);
 
@@ -55,13 +55,13 @@ namespace EcommerceBe.Services
                     OrderId = Guid.NewGuid(),
                     UserId = userId,
                     ShopId = shopId,
-                    CreatedAt = DateTime.UtcNow,
-                    OrderDate = DateTime.UtcNow,
+                    CreatedAt = now,
+                    OrderDate = now,
                     PaymentMethod = dto.PaymentMethod,
                     Status = "Pending",
                     TotalAmount = totalAmount,
-                    OrderItems = orderItems,
-                    ShippingAddressId = dto.ShippingAddressId // nếu bạn vẫn dùng Id, hoặc build từ địa chỉ thô
+                    ShippingAddressId = dto.ShippingAddressId,
+                    OrderItems = orderItems
                 };
 
                 await _orderRepository.AddOrderAsync(order);
@@ -71,56 +71,26 @@ namespace EcommerceBe.Services
             return orders;
         }
 
-        // get all order for admin using
         public async Task<List<ReponseOrderAllDto>> GetAllOrderAsync()
         {
-            try
-            {
-                var orders = await _orderRepository.GetAllOrderAsync();
-                if (orders == null || !orders.Any())
-                {
-                    throw new Exception("Không có đơn hàng nào");
-                }
+            var orders = await _orderRepository.GetAllOrderAsync();
+            if (orders == null || !orders.Any())
+                throw new Exception("Không có đơn hàng nào");
 
-                return orders.Select(o => new ReponseOrderAllDto
-                {
-                    OrderId = o.OrderId,
-                    CreatedAt = o.CreatedAt,
-                    ShippingAddress = o.ShippingAddress != null
-                        ? $"{o.ShippingAddress.FullName}, {o.ShippingAddress.PhoneNumber}, {o.ShippingAddress.Street}, {o.ShippingAddress.Ward}, {o.ShippingAddress.District}, {o.ShippingAddress.City}"
-                        : "",
-                    PaymentMethod = o.PaymentMethod,
-                    Status = o.Status,
-                    TotalAmount = o.TotalAmount,
-                    UserName = o.ShippingAddress?.user?.FullName ?? "",
-                    Items = o.OrderItems.Select(oi => new ReponseOrderItemDto
-                    {
-                        ProductId = oi.ProductId,
-                        ProductName = oi.product?.ProductName ?? "", // Include Product trước nhé
-                        Quantity = oi.Quantity,
-                        Price = oi.Price
-                    }).ToList()
-                }).ToList();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Lỗi khi lấy danh sách đơn hàng", ex);
-            }
+            return orders.Select(MapToResponseDto).ToList();
         }
 
-        // get order by id 
         public async Task<OrderDto> GetOrderByIdAsync(Guid orderId)
         {
             var order = await _orderRepository.GetOrderByIdAsync(orderId);
-            if (order == null) throw new Exception("Order not found");
+            if (order == null)
+                throw new Exception("Order not found");
 
             return new OrderDto
             {
                 OrderId = order.OrderId,
                 CreatedAt = order.CreatedAt,
-                ShippingAddress = order.ShippingAddress != null
-                    ? $"{order.ShippingAddress.FullName}, {order.ShippingAddress.PhoneNumber}, {order.ShippingAddress.Street}, {order.ShippingAddress.Ward}, {order.ShippingAddress.District}, {order.ShippingAddress.City}"
-                    : "",
+                ShippingAddress = FormatAddress(order.ShippingAddress),
                 PaymentMethod = order.PaymentMethod,
                 Status = order.Status,
                 TotalAmount = order.TotalAmount,
@@ -133,67 +103,27 @@ namespace EcommerceBe.Services
             };
         }
 
-        // get all order by shop
         public async Task<List<ReponseOrderAllDto>> GetOrdersByShopIdAsync(Guid shopId)
         {
             var orders = await _orderRepository.GetOrdersByShopIdAsync(shopId);
             if (orders == null || !orders.Any())
-            {
                 throw new Exception("Không có đơn hàng nào");
-            }
 
-            return orders.Select(o => new ReponseOrderAllDto
-            {
-                OrderId = o.OrderId,
-                CreatedAt = o.CreatedAt,
-                ShippingAddress = o.ShippingAddress != null
-                    ? $"{o.ShippingAddress.FullName}, {o.ShippingAddress.PhoneNumber}, {o.ShippingAddress.Street}, {o.ShippingAddress.Ward}, {o.ShippingAddress.District}, {o.ShippingAddress.City}"
-                    : "",
-                PaymentMethod = o.PaymentMethod,
-                Status = o.Status,
-                TotalAmount = o.TotalAmount,
-                UserName = o.ShippingAddress?.user?.FullName ?? "",
-                Items = o.OrderItems.Select(oi => new ReponseOrderItemDto
-                {
-                    ProductId = oi.ProductId,
-                    ProductName = oi.product?.ProductName ?? "", // Include Product trước nhé
-                    Quantity = oi.Quantity,
-                    Price = oi.Price
-                }).ToList()
-            }).ToList();
+            return orders.Select(MapToResponseDto).ToList();
         }
 
-        // get order for user
         public async Task<List<ReponseOrderAllDto>> GetOrdersByUserIdAsync(Guid userId)
         {
             var orders = await _orderRepository.GetOrdersByUserIdAsync(userId);
-
-            return orders.Select(o => new ReponseOrderAllDto
-            {
-                OrderId = o.OrderId,
-                CreatedAt = o.CreatedAt,
-                ShippingAddress = o.ShippingAddress != null
-                    ? $"{o.ShippingAddress.FullName}, {o.ShippingAddress.PhoneNumber}, {o.ShippingAddress.Street}, {o.ShippingAddress.Ward}, {o.ShippingAddress.District}, {o.ShippingAddress.City}"
-                    : "",
-                PaymentMethod = o.PaymentMethod,
-                Status = o.Status,
-                TotalAmount = o.TotalAmount,
-                UserName = o.ShippingAddress?.user?.FullName ?? "",
-                Items = o.OrderItems.Select(oi => new ReponseOrderItemDto
-                {
-                    ProductId = oi.ProductId,
-                    ProductName = oi.product?.ProductName ?? "", // Include Product trước nhé
-                    Quantity = oi.Quantity,
-                    Price = oi.Price
-                }).ToList()
-            }).ToList();
+            return orders.Select(MapToResponseDto).ToList();
         }
-
 
         public async Task UpdateOrderStatusAsync(Guid orderId, string status)
         {
             var order = await _orderRepository.GetOrderByIdAsync(orderId);
-            if (order == null) throw new Exception("Order not found");
+            if (order == null)
+                throw new Exception("Order not found");
+
             order.Status = status;
             await _orderRepository.UpdateOrderAsync(order);
         }
@@ -202,10 +132,46 @@ namespace EcommerceBe.Services
         {
             await _orderRepository.CancelOrderAsync(orderId, reason);
         }
+        public async Task DeleteOrderAsync(Guid orderId)
+        {
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
+            if (order == null) throw new Exception("Order not found");
 
+            await _orderRepository.DeleteAsync(order);
+            await _orderRepository.SaveChangeAsync();
+        }
         public async Task<bool> CheckOrderBelongsToUserAsync(Guid orderId, Guid userId)
         {
             return await _orderRepository.CheckOrderBelongsToUserAsync(orderId, userId);
+        }
+
+        // ========== Helper ==========
+
+        private static ReponseOrderAllDto MapToResponseDto(Order o)
+        {
+            return new ReponseOrderAllDto
+            {
+                OrderId = o.OrderId,
+                CreatedAt = o.CreatedAt,
+                ShippingAddress = FormatAddress(o.ShippingAddress),
+                PaymentMethod = o.PaymentMethod,
+                Status = o.Status,
+                TotalAmount = o.TotalAmount,
+                UserName = o.ShippingAddress?.user?.FullName ?? "",
+                Items = o.OrderItems.Select(oi => new ReponseOrderItemDto
+                {
+                    ProductId = oi.ProductId,
+                    ProductName = oi.product?.ProductName ?? "",
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            };
+        }
+
+        private static string FormatAddress(ShippingAddress? addr)
+        {
+            if (addr == null) return "";
+            return $"{addr.FullName}, {addr.PhoneNumber}, {addr.Street}, {addr.Ward}, {addr.District}, {addr.City}";
         }
     }
 }

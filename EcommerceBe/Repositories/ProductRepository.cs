@@ -24,6 +24,13 @@ namespace EcommerceBe.Repositories
                 .Where(p => !p.IsDeleted) // loại bỏ sản phẩm đã xóa mềm
                 .ToListAsync();
         }
+        public async Task<List<Product>> GetByIdsAsync(List<Guid> productIds)
+        {
+            return await _context.Products
+                .Where(p => productIds.Contains(p.ProductId))
+                .ToListAsync();
+        }
+
 
         public async Task<Product?> GetByIdAsync(Guid productId)
         {

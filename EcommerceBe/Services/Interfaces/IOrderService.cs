@@ -10,7 +10,7 @@ namespace EcommerceBe.Services.Interfaces
         Task<OrderDto> GetOrderByIdAsync(Guid orderId);
         Task<List<ReponseOrderAllDto>> GetOrdersByUserIdAsync(Guid userId);
         Task<List<ReponseOrderAllDto>> GetOrdersByShopIdAsync(Guid shopId);
-
+        Task DeleteOrderAsync(Guid orderId);
         Task UpdateOrderStatusAsync(Guid orderId, string status);
         Task CancelOrderAsync(Guid orderId, string reason);
         Task<bool> CheckOrderBelongsToUserAsync(Guid orderId, Guid userId);

@@ -66,12 +66,12 @@ namespace EcommerceBe.Controllers
             return Ok(new { message = "Order cancelled" });
         }
 
-        [HttpGet("{shopid}")]
-        public async Task<IActionResult> GetOrderByShop(Guid shopid)
+        [HttpGet("shop/{shopId}")]
+        public async Task<IActionResult> GetOrderByShop(Guid shopId)
         {
             try
             {
-                var orders = await _orderService.GetAllOrderAsync();
+                var orders = await _orderService.GetOrdersByShopIdAsync(shopId);
                 return Ok(orders);
             }catch (Exception ex)
             {
@@ -93,6 +93,20 @@ namespace EcommerceBe.Controllers
         {
             var order = await _orderService.GetOrderByIdAsync(orderId);
             return Ok(order);
+        }
+
+        [HttpDelete("{orderId}")]
+        public async Task<IActionResult> DeleteOrder(Guid orderId)
+        {
+            try
+            {
+                await _orderService.DeleteOrderAsync(orderId);
+                return Ok(new { message = "Order deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
         }
 
         [HttpPut("admin/{orderId}/status")]

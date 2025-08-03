@@ -13,11 +13,14 @@ namespace EcommerceBe.Models
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; }
         public int StockQuantity { get; set; }
+        public Guid? DiscountId { get; set; }
+        public Discount Discount { get; set; }
 
         public virtual Shop Shop { get; set; }
         public virtual ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
         public virtual ICollection<ProductImages> ProductImages { get; set; } = new List<ProductImages>();
         public virtual ICollection<ProductCategories> ProductCategories { get; set; } = new List<ProductCategories>();
+        public virtual ICollection<DiscountProduct> DiscountProducts { get; set; } = new List<DiscountProduct>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     }

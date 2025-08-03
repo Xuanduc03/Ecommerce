@@ -8,6 +8,7 @@ namespace EcommerceBe.Repositories.Interfaces
         Task<List<Product>> GetAllAsync();
         Task<Product?> GetByIdAsync(Guid productId);
         Task<List<Product>> GetByShopIdAsync(Guid shopId);
+        Task<List<Product>> GetByIdsAsync(List<Guid> productIds);
         Task UpdateStockAsync(Guid productId, int newStock);
         Task AddAsync(Product product);
         Task UpdateAsync(Guid productId, CreateProductDto dto);

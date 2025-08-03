@@ -52,15 +52,18 @@ const SellerManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [currentSeller, setCurrentSeller] = useState<Seller | null>(null);
   const [form] = Form.useForm();
+  const [shop, setShop] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [sellerToDelete, setSellerToDelete] = useState<string | null>(null);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState<boolean>(false);
   const [total, setTotal] = useState<number>(0);
-
+  const token = localStorage.getItem('authToken');
   const fetchSellers = async (search: string = '', page: number = 1, pageSize: number = 10) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
+
       if (!token) {
         message.error('Vui lòng đăng nhập lại.');
         return;
@@ -84,6 +87,18 @@ const SellerManagement: React.FC = () => {
     }
   };
 
+  const fetchShop = async () => {
+    try {
+      const res = await axios.get("https://localhost:7040/api/shop", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const all = res.data || [];
+      setShop(all);
+    } catch {
+      message.error("Không tải được shop");
+    }
+  };
+
   useEffect(() => {
     fetchSellers();
   }, [filterStatus]);
@@ -102,6 +117,7 @@ const SellerManagement: React.FC = () => {
 
   const handleEdit = (record: Seller) => {
     setCurrentSeller(record);
+    fetchShop();
     form.setFieldsValue({
       name: record.userFullName,
       email: record.userEmail,
@@ -114,23 +130,29 @@ const SellerManagement: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  const handleDelete = (userId: string) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      content: 'Bạn có chắc chắn muốn xóa seller này?',
-      onOk: async () => {
-        try {
-          const token = localStorage.getItem('authToken');
-          await axios.delete(`https://localhost:7040/api/admin/sellers/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          message.success('Xóa seller thành công');
-          fetchSellers(searchText, page, pageSize);
-        } catch (error: any) {
-          message.error(error.response?.data?.message || 'Lỗi khi xóa seller');
-        }
-      },
-    });
+  const showDeleteConfirm = (sellerId: string) => {
+    setSellerToDelete(sellerId);
+    setIsDeleteModalVisible(true);
+  };
+
+  const handleDelete = async () => {
+    if (!sellerToDelete) return;
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        message.error('Vui lòng đăng nhập lại.');
+        return;
+      }
+      await axios.delete(`https://localhost:7040/api/admin/sellers/${sellerToDelete}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      message.success('Xóa seller thành công');
+      setIsDeleteModalVisible(false);
+      fetchSellers(searchText, page, pageSize);
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Lỗi khi xóa seller');
+    }
   };
 
   const handleSubmit = async () => {
@@ -178,18 +200,13 @@ const SellerManagement: React.FC = () => {
     {
       title: 'Hành động', key: 'actions', width: 200, fixed: 'right', render: (_, record) => (
         <Space>
-          <Button icon={<EyeOutlined />} onClick={() => handleView(record)}>Xem</Button>
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>Sửa</Button>
-          <Button icon={<DeleteOutlined />} onClick={() => handleDelete(record.sellerId || record.key)}>Xóa</Button>
+          <Button icon={<DeleteOutlined />} onClick={() => showDeleteConfirm(record.sellerId)}>Xóa</Button>
         </Space>
       )
     },
   ];
 
-  const handleView = (record: Seller) => {
-    setCurrentSeller(record);
-    setIsModalVisible(true);
-  };
 
   return (
     <div className="seller-management">
@@ -283,8 +300,18 @@ const SellerManagement: React.FC = () => {
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="shopName" label="Tên shop">
-                <Input placeholder="Nhập tên shop" />
+              <Form.Item
+                name="shopId"
+                label="Chọn Shop"
+                rules={[{ required: true, message: "Vui lòng chọn Shop" }]}
+              >
+                <Select placeholder="Chọn shop">
+                  {shop.map((shop) => (
+                    <Select.Option key={shop.shopId} value={shop.shopId}>
+                      {shop.name}
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -305,6 +332,21 @@ const SellerManagement: React.FC = () => {
             </Col>
           </Row>
         </Form>
+      </Modal>
+
+
+      {/* delete modal */}
+      <Modal
+        title="Xác nhận xóa người bán"
+        open={isDeleteModalVisible}
+        onOk={handleDelete}
+        onCancel={() => setIsDeleteModalVisible(false)}
+        okText="Xóa"
+        cancelText="Hủy"
+        okType="danger"
+      >
+        <p>Bạn có chắc chắn muốn xóa tài khoản không?</p>
+        <p>Hành động này không thể hoàn tác.</p>
       </Modal>
     </div>
   );

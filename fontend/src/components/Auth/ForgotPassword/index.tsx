@@ -72,8 +72,8 @@ const ForgotPassword: React.FC = () => {
             />
             {error && <p className="error-message">{error}</p>}
           </div>
-          <button type="submit" className="submit-button" disabled={loading}>
-            Gửi liên kết đặt lại
+          <button type="submit" className="submit-button">
+            {loading ? "Đang xử lý..." : "Gửi liên kết đặt lại mật khẩu"}
           </button>
         </form>
       )}

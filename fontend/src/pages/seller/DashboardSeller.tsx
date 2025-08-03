@@ -77,31 +77,7 @@ const DashboardSeller: React.FC = () => {
   return (
     <>
       {/* Banner */}
-      <Card 
-        style={{ 
-          marginBottom: 24, 
-          background: 'linear-gradient(135deg, #ee4d2d 0%, #ff6b35 100%)',
-          border: 'none'
-        }}
-      >
-        <Row align="middle">
-          <Col span={18}>
-            <div style={{ color: 'white' }}>
-              <Title level={4} style={{ color: 'white', margin: 0 }}>
-                NÂNG CẤP TRANG SHOP CỦA BẠN VỚI BANNER CREATOR
-              </Title>
-              <Text style={{ color: 'white', opacity: 0.9 }}>
-                Banner đẹp mắt • Văn bản cá nhân hóa • Dễ sử dụng
-              </Text>
-            </div>
-          </Col>
-          <Col span={6} style={{ textAlign: 'right' }}>
-            <Button type="primary" size="large" style={{ backgroundColor: '#fff', color: '#ee4d2d', border: 'none' }}>
-              TẠO BANNER NGAY
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+
 
       <Row gutter={[24, 24]}>
         <Col span={18}>

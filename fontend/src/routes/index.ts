@@ -11,6 +11,7 @@ import CategoryProduct from "../components/Category/ListProductByCategory";
 import ShopPage from "../pages/ShopPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import ResetPasswordWithToken from "../components/Auth/ResetPassword";
+import MyOrder from "../components/OrderBuyer/MyOrder";
 
 const publicRoute : IRoute[] = [
     {path: "/", component: Home},
@@ -20,6 +21,7 @@ const publicRoute : IRoute[] = [
     {path: '/reset-password', component: ResetPasswordWithToken, layout: null},
     {path: '/signup', component: SignUp, layout: null},
     {path: '/cart', component: CartPage},
+    {path: '/order', component: MyOrder},
     {path: "/shop/:shopId", component: ShopPage},
     {path: '/me', component: ProfilePage},
     {path: '/category/:slug', component: CategoryProduct},
