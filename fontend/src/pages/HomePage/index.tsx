@@ -8,9 +8,7 @@ import banner2 from "../../assets/images/banner2.webp";
 import banner3 from "../../assets/images/banner3.webp";
 import banner4 from "../../assets/images/banner4.webp";
 import banner5 from "../../assets/images/banner5.webp";
-import flashSale1 from "../../assets/images/flashsale1.webp";
 import axios from 'axios';
-import type { ApiResponse } from '../../redux/categorySlice';
 import type { ProductCardProps } from '../../components/Product/ProductCard';
 import ShopListing from '../../components/Shop/ListShop';
 import { toast } from 'react-toastify';
@@ -18,28 +16,29 @@ import { toast } from 'react-toastify';
 const API_URL = 'https://localhost:7040/api';
 const slides = [
   {
-    title: 'Top tech for your ride',
-    description: 'Explore in-car entertainment, GPS, security devices, and more.',
-    buttonText: 'Shop now',
+    title: 'Công nghệ hàng đầu cho xe của bạn',
+    description: 'Khám phá giải trí trên xe, thiết bị định vị GPS, thiết bị an ninh và nhiều hơn nữa.',
+    buttonText: 'Mua ngay',
     backgroundColor: '#00b9c6',
     items: [
-      { image: banner1, label: 'Entertainment' },
-      { image: banner2, label: 'GPS' },
-      { image: banner3, label: 'Security devices' }
+      { image: banner1, label: 'Giải trí' },
+      { image: banner2, label: 'Định vị GPS' },
+      { image: banner3, label: 'Thiết bị an ninh' }
     ]
   },
   {
-    title: 'Home essentials',
-    description: 'Discover kitchenware, furniture, and home decor.',
-    buttonText: 'Shop now',
+    title: 'Đồ dùng thiết yếu cho gia đình',
+    description: 'Khám phá đồ nhà bếp, nội thất và trang trí nhà cửa.',
+    buttonText: 'Mua ngay',
     backgroundColor: '#ff6f61',
     items: [
-      { image: banner4, label: 'Kitchenware' },
-      { image: banner5, label: 'Furniture' },
-      { image: banner1, label: 'Home decor' }
+      { image: banner4, label: 'Đồ nhà bếp' },
+      { image: banner5, label: 'Nội thất' },
+      { image: banner1, label: 'Trang trí nhà cửa' }
     ]
   }
 ];
+
 
 export const Home: React.FC = () => {
   const [categories, setCategories] = useState([]);
@@ -144,13 +143,13 @@ export const Home: React.FC = () => {
 
   return (
     <div>
-      {/* <Carousel
+      <Carousel
         slides={slides}
         autoPlay={true}
         interval={4000}
         showArrows={true}
         showIndicators={true}
-      /> */}
+      />
 
       <ListCategory categories={categories} />
 

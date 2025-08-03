@@ -150,6 +150,24 @@
         public int CancelledOrders { get; set; }
     }
 
+
+    public class SellerOrderDto
+    {
+        public Guid OrderId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public string ShippingAddress { get; set; }
+        public string PaymentMethod { get; set; }
+        public string Status { get; set; }
+        public decimal TotalAmount { get; set; }
+        public List<ReponseOrderItemDto> Items { get; set; } = new();
+    }
+
+    public class UpdateOrderStatusDto
+    {
+        public string Status { get; set; }
+    }
     public class RecentOrderDto
     {
         public Guid OrderId { get; set; }

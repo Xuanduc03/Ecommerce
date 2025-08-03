@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, Copy, Home, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import './OrderSuccess.scss';
 
 const OrderSuccess: React.FC = () => {
   const { state } = useLocation();
@@ -89,6 +90,17 @@ const OrderSuccess: React.FC = () => {
           )}
         </div>
 
+        {/* Thông tin giao hàng */}
+        {orderDetails && orderDetails.shippingAddress && (
+          <div className="shipping-info">
+            <h3>Thông tin giao hàng</h3>
+            <div className="info-item">
+              <span>Người nhận:</span>
+              <strong>{orderDetails.shippingAddress}</strong>
+            </div>
+          </div>
+        )}
+
         {/* Hiển thị thông tin chuyển khoản nếu là banking */}
         {state.paymentMethod === 'banking' && state.bankInfo && (
           <div className="banking-info">
@@ -142,7 +154,7 @@ const OrderSuccess: React.FC = () => {
         <div className="success-actions">
           <button 
             className="btn-primary"
-            onClick={() => navigate('/orders')}
+            onClick={() => navigate('/order')}
           >
             <FileText size={20} />
             Xem đơn hàng

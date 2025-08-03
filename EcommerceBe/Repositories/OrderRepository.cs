@@ -150,5 +150,25 @@ namespace EcommerceBe.Repositories
             return await query.CountAsync();
         }
 
+        public async Task<List<Order>> GetOrdersBySellerIdAsync(Guid sellerId)
+        {
+            return await _context.Orders
+                .Include(o => o.ShippingAddress)
+                .ThenInclude(sa => sa.user)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.product)
+                .Include(o => o.Shop)
+                .Where(o => o.Shop.SellerId == sellerId)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<Shop?> GetShopBySellerIdAsync(Guid sellerId)
+        {
+            return await _context.Shops
+                .FirstOrDefaultAsync(s => s.SellerId == sellerId);
+        }
+
     }
 }
+

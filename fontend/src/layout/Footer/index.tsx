@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
 
   const companyInfo: CompanyInfo = {
     name: "Ecommerce Shop",
-    address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
+    address: "18 Phố viên, Đức thắng, Bắc từ liêm, Hà Nội",
     phone: "(028) 1234 5678",
     email: "contact@ecommerceshop.com"
   };

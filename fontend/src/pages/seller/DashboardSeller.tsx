@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Layout,
   Menu,
@@ -15,6 +15,7 @@ import {
   Badge,
   Alert,
   List,
+  Spin
 } from 'antd';
 import {
   SettingOutlined,
@@ -28,12 +29,47 @@ import {
   GiftOutlined,
   StarOutlined
 } from '@ant-design/icons';
+import axios from 'axios';
 
 const { Title, Text } = Typography;
 
-
+interface SellerStats {
+  totalProducts: number;
+  totalOrdersSold: number;
+  todayRevenue: number;
+  monthRevenue: number;
+}
 // Dashboard Component
 const DashboardSeller: React.FC = () => {
+
+  const [statistics, setStatistics] = useState<SellerStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSellerStatistics();
+  }, []);
+
+  const fetchSellerStatistics = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const userId = localStorage.getItem("userId"); // Assuming sellerId is stored as userId
+
+      if (!userId) {
+        console.error("No userId found");
+        return;
+      }
+
+      const response = await axios.get(`https://localhost:7040/api/statistics/seller/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStatistics(response.data);
+    } catch (error) {
+      console.error("Error fetching seller statistics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const shortcuts = [
     { key: 'my-products', label: 'Sản phẩm của tôi', icon: <BoxPlotOutlined />, color: '#1890ff' },
     { key: 'my-categories', label: 'Danh mục Shop', icon: <ShopOutlined />, color: '#52c41a' },
@@ -142,31 +178,49 @@ const DashboardSeller: React.FC = () => {
             <Text type="secondary">
               Dữ liệu thời gian thực đến GMT+7 13:00 | Tổng quan dữ liệu shop cho đơn hàng đã đặt
             </Text>
-            <Row gutter={[24, 24]} style={{ marginTop: 16 }}>
-              <Col span={8}>
-                <Statistic title="Doanh số" value={0} prefix="₫" />
-                <Text type="secondary">so với hôm qua: 0.00% ↓</Text>
-              </Col>
-              <Col span={8}>
-                <Statistic title="Lượt truy cập" value={0} />
-                <Text type="secondary">so với hôm qua: 0.00% ↓</Text>
-              </Col>
-              <Col span={8}>
-                <Statistic title="Lượt xem trang" value={0} />
-                <Text type="secondary">so với hôm qua: 0.00% ↓</Text>
-              </Col>
-            </Row>
-            <Row gutter={[24, 24]} style={{ marginTop: 16 }}>
-              <Col span={8}>
-                <Statistic title="Đơn hàng" value={0} />
-                <Text type="secondary">so với hôm qua: 0.00% ↓</Text>
-              </Col>
-              <Col span={8}>
-                <Statistic title="Tỷ lệ chuyển đổi" value="0.00%" />
-                <Text type="secondary">so với hôm qua: 0.00% ↓</Text>
-              </Col>
-            </Row>
+             {loading ? (
+              <div style={{ textAlign: 'center', padding: '50px' }}>
+                <Spin size="large" />
+              </div>
+            ) : (
+              <Row gutter={[24, 24]} style={{ marginTop: 16 }}>
+                <Col span={6}>
+                  <Statistic 
+                    title="Tổng sản phẩm" 
+                    value={statistics?.totalProducts || 0} 
+                    valueStyle={{ color: '#1890ff' }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <Statistic 
+                    title="Đơn hàng đã bán" 
+                    value={statistics?.totalOrdersSold || 0}
+                    valueStyle={{ color: '#52c41a' }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <Statistic 
+                    title="Doanh thu hôm nay" 
+                    value={statistics?.todayRevenue || 0} 
+                    suffix="đ"
+                    precision={0}
+                    valueStyle={{ color: '#fa8c16' }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <Statistic 
+                    title="Doanh thu tháng này" 
+                    value={statistics?.monthRevenue || 0} 
+                    suffix="đ"
+                    precision={0}
+                    valueStyle={{ color: '#722ed1' }}
+                  />
+                </Col>
+              </Row>
+            )}
           </Card>
+
+          
 
           {/* Marketing Center */}
           <Card 

@@ -71,7 +71,7 @@ export const ProfilePage: React.FC = () => {
                 return <AddressesTab />;
             case "password":
                 return <ChangePasswordForm />;
-            case "notifications":
+            case "orders":
                 return <div>Tab thông báo</div>;
             case "info":
                 return <div>Thông tin cá nhân</div>;

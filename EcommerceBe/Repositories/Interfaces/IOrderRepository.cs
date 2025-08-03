@@ -21,5 +21,8 @@ namespace EcommerceBe.Repositories.Interfaces
         Task<decimal> GetTotalRevenueAsync(Guid shopId, DateTime? from = null, DateTime? to = null);
         Task<int> GetTotalOrdersAsync(Guid shopId, DateTime? from = null, DateTime? to = null);
         Task<OrderStatusStatsDto> GetOrderStatusStatsAsync(Guid shopId, DateTime? from = null, DateTime? to = null);
+        Task<List<Order>> GetOrdersBySellerIdAsync(Guid sellerId);
+        Task<Shop?> GetShopBySellerIdAsync(Guid sellerId);
     }
 }
+

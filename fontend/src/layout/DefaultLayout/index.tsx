@@ -3,7 +3,7 @@ import Header from '../Header';
 import style from "./DefaultLayout.module.scss";
 import classNames from 'classnames/bind';
 import { useLocation } from 'react-router-dom';
-import Footer from '../Foolter';
+import Footer from '../Footer';
 
 const cx = classNames.bind(style);
 

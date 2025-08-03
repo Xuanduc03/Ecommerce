@@ -53,6 +53,10 @@ const OrderManager: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string | undefined>(
     undefined
   );
+  const [filterSeller, setFilterSeller] = useState<string | undefined>(
+    undefined
+  );
+  const [sellers, setSellers] = useState<any[]>([]);
 
   const token = localStorage.getItem("authToken");
 
@@ -70,9 +74,21 @@ const OrderManager: React.FC = () => {
     }
   }, [token]);
 
+  const fetchSellers = useCallback(async () => {
+    try {
+      const response = await axios.get("https://localhost:7040/api/seller", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSellers(response.data || []);
+    } catch (error) {
+      console.error("Error fetching sellers:", error);
+    }
+  }, [token]);
+
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+    fetchSellers();
+  }, [fetchOrders, fetchSellers]);
 
   // Xử lý lọc
   const filteredOrders = orders.filter((order) => {
@@ -81,7 +97,8 @@ const OrderManager: React.FC = () => {
       order.user?.username?.toLowerCase().includes(searchText.toLowerCase()) ||
       order.orderId.toLowerCase().includes(searchText.toLowerCase());
     const matchesStatus = !filterStatus || order.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    const matchesSeller = !filterSeller || order.shopId === filterSeller;
+    return matchesSearch && matchesStatus && matchesSeller;
   });
 
   const handleViewDetails = (order: Order) => {
@@ -92,7 +109,7 @@ const OrderManager: React.FC = () => {
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
       await axios.put(
-        `${API_URL}/${orderId}/status`,
+        `${API_URL}/admin/${orderId}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -189,7 +206,7 @@ const OrderManager: React.FC = () => {
     <Card>
       <Title level={3}>Quản lý đơn hàng (Seller)</Title>
       <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={8}>
+        <Col span={6}>
           <Input
             placeholder="Tìm theo tên khách hoặc mã đơn"
             value={searchText}
@@ -197,7 +214,7 @@ const OrderManager: React.FC = () => {
             allowClear
           />
         </Col>
-        <Col span={6}>
+        <Col span={5}>
           <Select
             allowClear
             placeholder="Lọc theo trạng thái"
@@ -213,9 +230,33 @@ const OrderManager: React.FC = () => {
             ]}
           />
         </Col>
+        <Col span={5}>
+          <Select
+            allowClear
+            placeholder="Lọc theo shop"
+            style={{ width: "100%" }}
+            value={filterSeller}
+            onChange={(val) => setFilterSeller(val)}
+            options={sellers.map(seller => ({
+              value: seller.shopId,
+              label: seller.shopName || `Shop ${seller.sellerId.substring(0, 8)}`
+            }))}
+          />
+        </Col>
         <Col span={4} style={{ textAlign: "right" }}>
           <Button icon={<ReloadOutlined />} onClick={fetchOrders} loading={loading}>
             Tải lại
+          </Button>
+        </Col>
+        <Col span={4}>
+          <Button 
+            onClick={() => {
+              setSearchText("");
+              setFilterStatus(undefined);
+              setFilterSeller(undefined);
+            }}
+          >
+            Xóa bộ lọc
           </Button>
         </Col>
       </Row>
@@ -266,3 +307,4 @@ const OrderManager: React.FC = () => {
 };
 
 export default OrderManager;
+

@@ -50,20 +50,41 @@ namespace EcommerceBe.Controllers
         [HttpGet("user")]
         public async Task<IActionResult> GetUserOrders()
         {
-            var userId = GetCurrentUserId();
-            var orders = await _orderService.GetOrdersByUserIdAsync(userId);
-            return Ok(orders);
+            try
+            {
+                var userId = GetCurrentUserId();
+                var orders = await _orderService.GetOrdersByUserIdAsync(userId);
+                return Ok(orders);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
-        [HttpPut("{orderId}/cancel")]
-        public async Task<IActionResult> CancelOrder(Guid orderId, [FromBody] CancelOrderDto dto)
+        [HttpDelete("user/{orderId}")]
+        public async Task<IActionResult> CancelUserOrder(Guid orderId)
         {
-            var userId = GetCurrentUserId();
-            var isOwner = await _orderService.CheckOrderBelongsToUserAsync(orderId, userId);
-            if (!isOwner) return Forbid();
+            try
+            {
+                var userId = GetCurrentUserId();
+                var isOwner = await _orderService.CheckOrderBelongsToUserAsync(orderId, userId);
+                if (!isOwner) return Forbid("You can only cancel your own orders");
 
-            await _orderService.CancelOrderAsync(orderId, dto.Reason);
-            return Ok(new { message = "Order cancelled" });
+                // Chỉ cho phép hủy đơn nếu trạng thái là "pending" hoặc "confirmed"
+                var order = await _orderService.GetOrderByIdAsync(orderId);
+                if (order.Status != "pending" && order.Status != "confirmed")
+                {
+                    return BadRequest(new { error = "Cannot cancel order in current status" });
+                }
+
+                await _orderService.CancelOrderAsync(orderId, "Cancelled by user");
+                return Ok(new { message = "Order cancelled successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpGet("shop/{shopId}")]
@@ -111,10 +132,17 @@ namespace EcommerceBe.Controllers
 
         [HttpPut("admin/{orderId}/status")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AdminUpdateOrderStatus(Guid orderId, [FromQuery] string status)
+        public async Task<IActionResult> AdminUpdateOrderStatus(Guid orderId, [FromBody] UpdateOrderStatusDto dto)
         {
-            await _orderService.UpdateOrderStatusAsync(orderId, status);
-            return Ok(new { message = "Order status updated by admin" });
+            try
+            {
+                await _orderService.UpdateOrderStatusAsync(orderId, dto.Status);
+                return Ok(new { message = "Order status updated by admin" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
     }
 }

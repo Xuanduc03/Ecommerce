@@ -1,4 +1,4 @@
-import { Card, Row, Col, Statistic, Progress, Divider } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Divider, Spin } from 'antd';
 import {
   ArrowUpOutlined,
   ArrowDownOutlined,
@@ -6,12 +6,46 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
+  ShoppingOutlined,
+  DollarOutlined,
 } from '@ant-design/icons';
 import { Pie, Line } from '@ant-design/charts';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const { Meta } = Card;
 
+interface AdminStats {
+  totalOrders: number;
+  completedOrders: number;
+  cancelledOrders: number;
+  todayRevenue: number;
+  monthRevenue: number;
+}
+
 const AdminDashboard = () => {
+
+  const [statistics, setStatistics] = useState<AdminStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAdminStatistics();
+  }, []);
+
+  const fetchAdminStatistics = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await axios.get("https://localhost:7040/api/statistics/admin", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStatistics(response.data);
+    } catch (error) {
+      console.error("Error fetching admin statistics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Dữ liệu biểu đồ đường
   const lineData = [
     { month: 'Feb', value: 1200 },
@@ -72,71 +106,84 @@ const AdminDashboard = () => {
         <span style={{ color: '#1890ff' }}>Ecommerce</span>
       </div>
 
-      {/* Thống kê chính */}
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Visitors"
-              value={20149}
-              prefix="$"
-              valueStyle={{ color: '#3f8600' }}
-              suffix={
-                <span style={{ fontSize: 14, color: '#3f8600' }}>
-                  <ArrowUpOutlined /> 6%
-                </span>
-              }
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Customers"
-              value={5834}
-              prefix="$"
-              valueStyle={{ color: '#cf1322' }}
-              suffix={
-                <span style={{ fontSize: 14, color: '#cf1322' }}>
-                  <ArrowDownOutlined /> -12%
-                </span>
-              }
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Orders"
-              value={3270}
-              prefix="$"
-              valueStyle={{ color: '#3f8600' }}
-              suffix={
-                <span style={{ fontSize: 14, color: '#3f8600' }}>
-                  <ArrowUpOutlined /> 10%
-                </span>
-              }
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Sales"
-              value={1324000}
-              prefix="$"
-              precision={1}
-              valueStyle={{ color: '#3f8600' }}
-              suffix={
-                <span style={{ fontSize: 14, color: '#3f8600' }}>
-                  <ArrowUpOutlined /> 2%
-                </span>
-              }
-            />
-          </Card>
-        </Col>
-      </Row>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" />
+        </div>
+      ) : (
+        <Row gutter={16} style={{ marginBottom: 16 }}>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="Tổng đơn hàng"
+                value={statistics?.totalOrders || 0}
+                prefix={<ShoppingOutlined />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="Đơn hoàn thành"
+                value={statistics?.completedOrders || 0}
+                prefix={<CheckCircleOutlined />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="Đơn đã hủy"
+                value={statistics?.cancelledOrders || 0}
+                prefix={<CloseCircleOutlined />}
+                valueStyle={{ color: '#f5222d' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="Doanh thu hôm nay"
+                value={statistics?.todayRevenue || 0}
+                prefix={<DollarOutlined />}
+                suffix="đ"
+                precision={0}
+                valueStyle={{ color: '#fa8c16' }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
+      {/* Doanh thu tháng này */}
+      {!loading && statistics && (
+        <Row gutter={16} style={{ marginBottom: 16 }}>
+          <Col span={12}>
+            <Card title="Doanh thu tháng này">
+              <Statistic
+                value={statistics.monthRevenue}
+                suffix="đ"
+                precision={0}
+                valueStyle={{ color: '#3f8600', fontSize: '24px' }}
+              />
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card title="Tỷ lệ hoàn thành đơn hàng">
+              <Progress
+                percent={statistics.totalOrders > 0 ? Math.round((statistics.completedOrders / statistics.totalOrders) * 100) : 0}
+                status="active"
+                strokeColor={{
+                  '0%': '#108ee9',
+                  '100%': '#87d068',
+                }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
       {/* Hàng thứ 2 - Đánh giá và biểu đồ */}
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={12}>
