@@ -1,4 +1,4 @@
-﻿using EcommerceBe.Dto;
+using EcommerceBe.Dto;
 using EcommerceBe.Models;
 using EcommerceBe.Repositories.Interfaces;
 using EcommerceBe.Services.Interfaces;
@@ -153,11 +153,18 @@ namespace EcommerceBe.Services
             {
                 OrderId = o.OrderId,
                 CreatedAt = o.CreatedAt,
+                OrderDate = o.OrderDate,
                 ShippingAddress = FormatAddress(o.ShippingAddress),
                 PaymentMethod = o.PaymentMethod,
                 Status = o.Status,
                 TotalAmount = o.TotalAmount,
-                UserName = o.ShippingAddress?.user?.FullName ?? "",
+                UserName = o.ShippingAddress?.user?.FullName ?? o.User?.FullName ?? "",
+                UserId = o.UserId,
+                ShopId = o.ShopId,
+                ShippingAddressId = o.ShippingAddressId,
+                User = o.User,
+                Shop = o.Shop,
+                ShippingAddressDetails = o.ShippingAddress,
                 Items = o.OrderItems.Select(oi => new ReponseOrderItemDto
                 {
                     ProductId = oi.ProductId,

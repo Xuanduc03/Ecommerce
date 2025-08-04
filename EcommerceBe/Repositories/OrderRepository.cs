@@ -1,4 +1,4 @@
-﻿using EcommerceBe.Database;
+using EcommerceBe.Database;
 using EcommerceBe.Dto;
 using EcommerceBe.Models;
 using EcommerceBe.Repositories.Interfaces;
@@ -28,9 +28,10 @@ namespace EcommerceBe.Repositories
             .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.product)
             .Include(o => o.Shop)
+            .Include(o => o.User)
             .Include(o => o.ShippingAddress)
                 .ThenInclude(addr => addr.user)
-                .Where(x => x.Status == "pending")
+                .OrderByDescending(o => o.CreatedAt)
                 .ToListAsync();
 
             return orders;

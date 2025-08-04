@@ -52,17 +52,31 @@ const DashboardSeller: React.FC = () => {
   const fetchSellerStatistics = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const userId = localStorage.getItem("userId"); // Assuming sellerId is stored as userId
 
-      if (!userId) {
-        console.error("No userId found");
+      if (!token) {
+        console.error("No auth token found");
+        setLoading(false);
         return;
       }
 
-      const response = await axios.get(`https://localhost:7040/api/statistics/seller/${userId}`, {
+      // First get seller info to get sellerId
+      const sellerResponse = await axios.get("https://localhost:7040/api/seller/me", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setStatistics(response.data);
+
+      const sellerId = sellerResponse.data?.sellerId;
+      if (!sellerId) {
+        console.error("No sellerId found");
+        setLoading(false);
+        return;
+      }
+
+      // Then get statistics using sellerId
+      const statisticsResponse = await axios.get(`https://localhost:7040/api/statistics/seller/${sellerId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setStatistics(statisticsResponse.data);
     } catch (error) {
       console.error("Error fetching seller statistics:", error);
     } finally {
