@@ -1,4 +1,4 @@
-﻿namespace EcommerceBe.Dto
+namespace EcommerceBe.Dto
 {
     public class OrderCreateDto
     {
@@ -35,6 +35,7 @@
     {
         public Guid OrderId { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime OrderDate { get; set; }
         public string ShippingAddress { get; set; }
         public string PaymentMethod { get; set; }
         public string ShippingMethod { get; set; }
@@ -44,6 +45,12 @@
         public decimal TotalAmount { get; set; }
         public decimal? ShippingFee { get; set; }
         public string UserName { get; set; }
+        public Guid UserId { get; set; }
+        public Guid ShopId { get; set; }
+        public Guid ShippingAddressId { get; set; }
+        public User? User { get; set; }
+        public Shop? Shop { get; set; }
+        public ShippingAddress? ShippingAddressDetails { get; set; }
         public List<ReponseOrderItemDto> Items { get; set; } = new();
     }
 

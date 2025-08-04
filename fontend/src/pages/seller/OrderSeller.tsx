@@ -34,15 +34,15 @@ interface Order {
   productName: string;
   quantity: number;
   totalPrice: number;
-  status: 'pending' | 'processed' | 'shipping' | 'completed' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   customerName: string;
   customerPhone: string;
   customerAddress: string;
   products: Array<{
-    name: string;
+    productName: string;
     quantity: number;
     price: number;
-    image: string;
+    productId: string;
   }>;
   shippingChannel: string;
   trackingNumber?: string;
@@ -57,7 +57,6 @@ interface FilterState {
 const OrderSellerManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [orders, setOrders] = useState<Order[]>([]);
-  const [shopId, setShopId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [filters, setFilters] = useState<FilterState>({
     searchText: '',
@@ -77,31 +76,6 @@ const OrderSellerManager: React.FC = () => {
 
 
   const token = localStorage.getItem("authToken");
-
-  // Fetch shopId của seller
-  const fetchShopForSeller = async () => {
-    try {
-      const sellerRes = await axios.get("https://localhost:7040/api/seller/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const seller = sellerRes.data;
-      if (!seller?.sellerId) return message.error("Không tìm thấy thông tin seller!");
-
-      const shopRes = await axios.get(`https://localhost:7040/api/shop/seller/${seller.sellerId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const shop = shopRes.data;
-      if (!shop?.shopId) return message.error("Seller chưa có cửa hàng!");
-
-      setShopId(shop.shopId);
-      console.log("shop", shop.shopId);
-    } catch {
-      message.error("Không thể tải thông tin Shop cho seller!");
-    }
-  };
-  useEffect(() => {
-    fetchShopForSeller();
-  }, [token]);
 
   const fetchSellerOrders = async () => {
     try {
@@ -160,17 +134,17 @@ const OrderSellerManager: React.FC = () => {
   const statusMap = {
     all: 'Tất cả',
     pending: 'Chờ xử lý',
-    processed: 'Đã xử lý',
-    shipping: 'Đang vận chuyển',
-    completed: 'Hoàn tất',
+    processing: 'Đang xử lý',
+    shipped: 'Đang vận chuyển',
+    delivered: 'Hoàn tất',
     cancelled: 'Đã hủy'
   };
 
   const statusColors = {
     pending: 'orange',
-    processed: 'blue',
-    shipping: 'purple',
-    completed: 'green',
+    processing: 'blue',
+    shipped: 'purple',
+    delivered: 'green',
     cancelled: 'red'
   };
 
@@ -213,8 +187,8 @@ const OrderSellerManager: React.FC = () => {
   const columns = [
     {
       title: 'Mã đơn hàng',
-      dataIndex: 'orderId',
-      key: 'orderId',
+      dataIndex: 'orderCode',
+      key: 'orderCode',
       width: 120,
       render: (text: string) => <Text strong>{text}</Text>
     },
@@ -240,7 +214,7 @@ const OrderSellerManager: React.FC = () => {
     },
     {
       title: "Tổng tiền",
-      dataIndex: "totalAmount",
+      dataIndex: "totalPrice",
       render: (val: any) =>
         val.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
     },
@@ -270,8 +244,8 @@ const OrderSellerManager: React.FC = () => {
       render: (status: string) => {
         const colorMap: { [key: string]: string } = {
           pending: 'warning',
-          confirmed: 'processing',
-          shipping: 'blue',
+          processing: 'processing',
+          shipped: 'blue',
           delivered: 'success',
           cancelled: 'error'
         };
@@ -293,7 +267,7 @@ const OrderSellerManager: React.FC = () => {
           >
             Xem chi tiết
           </Button>
-          {record.status === 'shipping' && (
+          {record.status === 'shipped' && (
             <Button
               type="primary"
               size="small"
@@ -306,16 +280,16 @@ const OrderSellerManager: React.FC = () => {
             <Button
               type="primary"
               size="small"
-              onClick={() => updateOrderStatus(record.id, 'confirmed')}
+              onClick={() => updateOrderStatus(record.id, 'processing')}
             >
               Xác nhận đơn
             </Button>
           )}
-          {record.status === 'confirmed' && (
+          {record.status === 'processing' && (
             <Button
               type="primary"
               size="small"
-              onClick={() => updateOrderStatus(record.id, 'shipping')}
+              onClick={() => updateOrderStatus(record.id, 'shipped')}
             >
               Giao hàng
             </Button>
@@ -329,9 +303,9 @@ const OrderSellerManager: React.FC = () => {
   const tabItems = [
     { key: 'all', label: 'Tất cả' },
     { key: 'pending', label: 'Chờ xử lý' },
-    { key: 'processed', label: 'Đã xử lý' },
-    { key: 'shipping', label: 'Đang vận chuyển' },
-    { key: 'completed', label: 'Hoàn tất' },
+    { key: 'processing', label: 'Đang xử lý' },
+    { key: 'shipped', label: 'Đang vận chuyển' },
+    { key: 'delivered', label: 'Hoàn tất' },
     { key: 'cancelled', label: 'Đã hủy' }
   ];
 
@@ -432,13 +406,14 @@ const OrderSellerManager: React.FC = () => {
           columns={columns}
           dataSource={filteredOrders}
           rowKey="id"
+          loading={loading}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} đơn hàng`
           }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1400 }}
         />
 
         {/* Detail Modal */}
@@ -490,8 +465,7 @@ const OrderSellerManager: React.FC = () => {
                 renderItem={(product) => (
                   <List.Item>
                     <List.Item.Meta
-                      avatar={<img src={product.image} alt={product.name} style={{ width: 60, height: 60 }} />}
-                      title={product.name}
+                      title={product.productName}
                       description={`Số lượng: ${product.quantity} | Giá: ${product.price.toLocaleString('vi-VN')} ₫`}
                     />
                   </List.Item>
